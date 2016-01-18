@@ -1,0 +1,104 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+        xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jaxws="http://cxf.apache.org/jaxws"
+        xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx-3.1.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
+       http://www.springframework.org/schema/jee
+       http://www.springframework.org/schema/jee/spring-jee-3.1.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context-3.1.xsd
+       http://www.springframework.org/schema/util
+       http://www.springframework.org/schema/util/spring-util-3.1.xsd
+       http://cxf.apache.org/jaxrs
+       http://cxf.apache.org/schemas/jaxrs.xsd
+		http://cxf.apache.org/jaxws
+       	http://cxf.apache.org/schemas/jaxws.xsd
+	http://cxf.apache.org/core
+	http://cxf.apache.org/schemas/core.xsd">
+
+<import resource="classpath:META-INF/cxf/cxf.xml"/>
+<import resource="classpath:META-INF/cxf/cxf-extension-http-binding.xml"/>
+<import resource="classpath:META-INF/cxf/cxf-servlet.xml"/>
+	<context:annotation-config />
+	<jee:jndi-lookup id="dataSource" jndi-name="java:comp/env/jdbc/mailer" />
+
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<value>classpath:com/fidloo/fidloo.properties</value>
+		</property>
+	</bean>
+	
+	<bean id="configReader" class="com.hungermeals.common.ConfigReader"></bean>
+
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName">
+			<value>${database.driver}</value>
+		</property>
+		<property name="url">
+			<value>${database.url}</value>
+		</property>
+		<property name="username">
+			<value>${database.uname}</value>
+		</property>
+		<property name="password">
+			  <value>${database.password}</value>
+		</property>
+		<property name="initialSize">
+			<value>2</value>
+		</property>
+		<property name="maxActive">
+			<value>5</value>
+		</property>
+		<property name="maxIdle">
+			<value>2</value>
+		</property>
+		
+		<property name="maxWait">
+			<value>60000</value>
+		</property>
+	</bean>
+
+	<bean id="jaxbProvider" class="org.apache.cxf.jaxrs.provider.JSONProvider">
+		<property name="namespaceMap" ref="jsonNamespaceMap"/>
+	</bean>
+	
+	<!-- Jax RS Configuration for Rest Services -->
+	<util:map id="jsonNamespaceMap" map-class="java.util.Hashtable">
+ 		<entry key="http://ws.mailer.com" value="t"/>
+	</util:map>
+
+	
+	<!--Hungermeals Project configuration  -->
+		<bean id="userAPI" class="com.hungermeals.api.UserAPIImpl"/>
+		<bean id="userFacade" class="com.hungermeals.facade.UserFacadeImpl"/>
+		<bean id="userDAO" class="com.hungermeals.dao.UserDAOImpl">
+		<property name="dataSource" ref="dataSource"/>
+		</bean>
+
+
+		<bean id="userController" class="com.hungermeals.controller.UserController">
+		</bean>
+		
+	
+	
+	<jaxrs:server id="restServer" address="/json">
+		<jaxrs:serviceBeans>
+			<ref bean="userController" />
+		</jaxrs:serviceBeans>
+		<jaxrs:providers>
+			<ref bean="jaxbProvider" />
+		</jaxrs:providers>
+	</jaxrs:server>
+		
+</beans>

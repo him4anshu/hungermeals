@@ -1,0 +1,249 @@
+/**
+	Name: global.css
+	version - 1
+**/
+
+/* ------- Global CSS Coding ------- */
+
+body {font-family: Verdana, tahoma, helvetica, arial, sans-serif; font-size: 12px; color: #333; margin: 0; padding: 0; background: #f5f5f5 url(../../images/body_background.jpg);}
+
+/* ------- Colors Used ------- */
+
+.dark_gray{
+	color: #333;
+}
+
+.medium_gray{
+	color: #666;
+}
+
+.light_gray{
+	color: #999;
+}
+
+.blue{
+	color: #176EFF;
+}
+
+.white{
+	color: #fff;
+}
+
+/* ------- END Colors Used ------- */
+
+/* ------- Font Size ------- */
+
+.font_size_11{
+	font-size: 11px;
+}
+
+.font_size_12{
+	font-size: 12px;
+}
+
+.font_size_13{
+	font-size: 13px;
+}
+
+.font_size_14{
+	font-size: 14px;
+}
+
+.font_size_16{
+	font-size: 16px;
+}
+
+/* ------- END Font Size ------- */
+
+/* ------- Font Styes ------- */
+
+.font_normal{
+	font-weight: normal;
+}
+
+.font_bold{
+	font-weight: bold;
+}
+
+.font_italic{
+	font-style: italic;
+}
+
+.text_align_justify{
+	text-align: justify;
+}
+
+/* ------- END Font Styles ------- */
+
+/* ------- Links style ------- */
+
+a:link, a:visited{
+	color: #176EFF;
+	text-decoration: none;
+}
+
+a:hover, a:active{
+	text-decoration: underline;
+}
+
+.global_button{
+	font-family: lucida grande, arial;
+	background: #124191;
+	padding: 4px 12px; 
+	font-size: 12px;
+	font-weight: bold;
+	color: #fff;
+	cursor: pointer;
+	outline: 0;
+	border: 1px solid #0F3B87;
+}
+
+.global_button:hover{
+	background: #224B8F;
+	border: 1px solid #0F3B87;
+	box-shadow: 0 1px 2px #999;
+	-moz-box-shadow: 0 1px 2px #999;
+	-webkit-box-shadow: 0 1px 2px #999;
+}
+
+.global_textfield{
+	color: #666;
+	border: 1px solid #ddd;
+	outline: 0;
+	padding: 6px 5px;
+	font-size: 16px;
+}
+
+.global_textfield:focus{
+	color: #333;
+	border: 1px solid #aaa;
+	box-shadow: inset 0 0 5px #ccc;
+	transition: all 0.50s ease-in-out;
+	-webkit-transition: all 0.50s ease-in-out;
+	-moz-transition: all 0.50s ease-in-out;
+}
+
+/* ------- Layout ------- */
+
+.nomargin_nopadding{
+	margin: 0;
+	padding: 0;
+}
+
+p{
+	line-height: 150%;
+	font-size: 14px;
+}
+
+#wrapper{
+	margin: 20px auto 0 auto;
+	width: 320px;
+	min-height: 240px;
+	border: 1px solid #ccc;
+	box-shadow: 0 0 6px #ccc;
+	-moz-box-shadow: 0 0 6px #ccc;
+	-webit-box-shadow: 0 0 6px #ccc;
+	background: #f5f5f5 url(../../images/main_content_bg.png);
+}
+
+#header{
+	position: relative;
+	width: 320px;
+	min-height: 40px;
+	margin: 0 auto;
+}
+
+#logo{
+	position: absolute;
+	top: 10px;
+	left: 0;
+	font-family: century gothic, lucida sans unicode, arial;
+}
+
+#main_content{
+	float: left;
+	min-height: 100px;
+	width: 94%;
+	margin: 10px 0;
+	padding: 0 10px;
+}
+
+.global_textfield_member_login_width{
+	width: 286px;
+}
+
+#form{
+	margin: 20px auto;
+	width: 250px;
+	padding: 10px;
+}
+
+#footer{
+	position: relative;
+	width: 320px;
+	min-height: 30px;
+	clear: both;
+	margin: 0 auto;
+}
+
+@media all and (min-width: 800px){
+	#wrapper{
+		margin: 50px auto 0 auto;
+		width: 99%;
+		min-height: 400px;
+		background: #f5f5f5 url(../../images/main_content_bg.png);
+		border-left: 5px solid #ccc; 
+		border-right: 5px solid #ccc; 
+		box-shadow: 0 0 6px #ccc;
+		-moz-box-shadow: 0 0 6px #ccc;
+		-webit-box-shadow: 0 0 6px #ccc;
+		
+	}
+
+	#header{
+		position: relative;
+		width: 100%;
+		min-height: 40px;
+	}
+
+	#logo{
+		position: absolute;
+		top: 26px;
+		left: 0;
+		font-family: century gothic, lucida sans unicode, arial;
+	}
+
+	#main_content{
+		width: 98.9%;
+		min-height: 300px;
+		margin: 10px 0;
+		padding: 10px 0;
+	}
+	
+	#members_login_form{
+		margin: 80px auto;
+		width: 250px;
+		padding: 20px;
+		background: #fff;
+		box-shadow: 0 0 5px #ccc;
+		-moz-box-shadow: 0 0 5px #ccc;
+		-webkit-box-shadow: 0 0 5px #ccc;
+	}
+	
+	.global_textfield_member_login_width{
+		width: 238px;
+	}
+
+	#footer{
+		margin: 10px auto;
+		width: 98.5%;
+		min-height: 30px;
+		clear: both;
+		padding: 0 10px;
+	}
+	
+	
+	/*style for pagination*/
+	
+	
+}

@@ -1,0 +1,94 @@
+<project name="fidloo" basedir="." default="build">
+	<property name="build" location="build"/>
+	<property name="classes" location="${build}/classes"/>
+	<property name="classes.war" location="${classes}/war"/>
+	<property name="classes.core" location="${classes}/core"/>
+	<property name="classes.test" location="${classes}/test"/>
+	<property name="deploy" location="${build}/deploy"/>
+    <property name="configHome" location="${deploy}/NLCP_CONFIG"/>
+    <property name="exploded" location="${deploy}/exploded"/>
+    <property name="test-reports" location="${build}/test-reports"/>
+	<property name="lib" location="lib"/>
+	
+	<property name="coreSrc" location="src/core" />
+	<property name="warSrc" location="src/war" />
+	<property name="testSrc" location="src/test" />
+    <property name="etcSrc" location="src/etc" />
+	
+	<import file="${basedir}/src/core/build.xml"/>
+    <import file="${basedir}/src/war/build.xml"/>
+    <import file="${basedir}/src/test/build.xml"/>
+    
+    <!-- - - - - - - - - - - - - - - - - - 
+          target: build                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="build">
+        <antcall target="init"></antcall>
+    	 <antcall target="createConfig"></antcall>
+        <antcall target="compile.core"></antcall>
+        <antcall target="compile.war"></antcall>
+        <antcall target="compile.test"></antcall>
+    	<!-- <antcall target="addConfig"></antcall>-->
+    </target>
+
+	
+	<!-- - - - - - - - - - - - - - - - - -
+          target: clean
+          removes all the build directories
+         - - - - - - - - - - - - - - - - - -->
+    <target name="clean">
+    	<delete dir="${build}"></delete>
+    </target>
+
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: init 
+          creates the default folders 
+         - - - - - - - - - - - - - - - - - -->
+    <target name="init" depends="clean">
+    	<mkdir dir="${build}"/>
+    	<mkdir dir="${classes}"/>
+    	<mkdir dir="${classes.war}"/>
+    	<mkdir dir="${classes.core}"/>
+    	<mkdir dir="${classes.test}"/>
+        <mkdir dir="${test-reports}"/>
+    	<mkdir dir="${deploy}"/>
+        <mkdir dir="${exploded}"/>
+        <mkdir dir="${configHome}"/>
+    </target>
+	
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: compile.core
+         - - - - - - - - - - - - - - - - - -->
+    <target name="compile.core">
+    	<antcall target="buildCore"></antcall>
+    </target>
+    
+    <!-- - - - - - - - - - - - - - - - - - 
+          target: compile.web                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="compile.war">
+        <antcall target="buildWar"></antcall>
+    	<!--<antcall target="deployCore"></antcall> -->
+    </target>
+
+    
+    <!-- - - - - - - - - - - - - - - - - - 
+          target: compile.test                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="compile.test">
+        <antcall target="buildTestCases"></antcall>
+    </target>
+    
+    <!-- - - - - - - - - - - - - - - - - - 
+          target: executeTestCases                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="executeTestCases">
+        <antcall target="runTestCases"></antcall>
+    </target>
+
+	<!--
+	<target name="deployCore">
+		<copy file="${deploy}/fidloo.war" todir="D:\apache-tomcat-8.0.30\webapps\" overwrite="true"/>
+	</target>	-->
+
+</project>

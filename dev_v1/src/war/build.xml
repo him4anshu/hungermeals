@@ -1,0 +1,91 @@
+<project name="mailerWar">
+
+    <path id="war.path">
+        <fileset dir="${lib}">
+            <include name="*.jar" />
+        </fileset>
+        <fileset dir="${deploy}">
+            <include name="fidloo_core.jar" />
+        </fileset>
+    </path>
+
+    <!-- - - - - - - - - - - - - - - - - - 
+          target: buildWar                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="buildWar">
+        <antcall target="compileWar">
+        </antcall>
+        <antcall target="createWar">
+        </antcall>
+        <antcall target="createExplodedWar">
+        </antcall>
+    </target>
+
+    <!-- - - - - - - - - - - - - - - - - - 
+          target: compileWar
+         - - - - - - - - - - - - - - - - - -->
+    <target name="compileWar">
+        <javac source="6" srcdir="${warSrc}" debug="on" destdir="${classes.war}" debuglevel="lines,vars,source" classpathref="war.path">
+        </javac>
+    </target>
+
+    <!-- - - - - - - - - - - - - - - - - - 
+          target: createWar
+         - - - - - - - - - - - - - - - - - -->
+    <target name="createWar" depends="createConfig">
+        <war destfile="${deploy}/fidloo.war" webxml="${warSrc}/web/WEB-INF/web.xml">
+            <lib dir="${lib}">
+                <exclude name="junit-4.4.jar" />
+                <exclude name="mysql-connector-java-5.0.4-bin.jar" />
+            </lib>
+            <lib dir="${deploy}">
+                <include name="fidloo_core.jar" />
+            </lib>
+            <classes dir="${classes.war}">
+                <include name="**/*.class" />
+            </classes>
+            <classes dir="${warSrc}/web/WEB-INF">
+                <include name="mailer.xml" />
+                <include name="struts.xml" />
+            </classes>
+        	
+
+        <zipfileset dir="${configHome}/config/com/fidloo" includes="**/*.properties" prefix="WEB-INF/classes/com/fidloo"/>
+        <zipfileset dir="${configHome}/resources/com/fidloo/errorcode" prefix="WEB-INF/classes/com/fidloo/errorcode"/>
+        	 <zipfileset dir="${warSrc}/web/jsp" prefix="jsp" />
+	     <zipfileset dir="${warSrc}/web/images" prefix="images" />
+        	<zipfileset dir="${warSrc}/web/scripts" prefix="scripts" />
+            <zipfileset dir="${warSrc}/web/WEB-INF" prefix="WEB-INF">
+                <include name="applicationContext.xml" />
+                <include name="jboss-web.xml" />
+            </zipfileset>
+        </war>
+    	
+    </target>
+
+    <!-- - - - - - - - - - - - - - - - - - 
+          target: createConfig                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="createConfig">
+        <copydir src="${etcSrc}" dest="${configHome}" includes="**/*.*" />
+        <copy todir="${configHome}/resources">
+            <fileset dir="${warSrc}" includes="com/fidloo/fidloo/**/*-validation.xml" />
+        </copy>
+        <copy todir="${configHome}/resources">
+            <fileset dir="${warSrc}" includes="com/fidloo/fidloo/**/*.properties" />
+        </copy>
+    </target>
+
+
+    <!-- - - - - - - - - - - - - - - - - - 
+          target: createExplodedWar                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="createExplodedWar">
+        <unwar src="${deploy}/fidloo.war" dest="${exploded}/fidloo.war">
+        </unwar>
+    </target>
+	
+		
+
+
+</project>

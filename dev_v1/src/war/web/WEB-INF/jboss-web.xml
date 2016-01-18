@@ -1,0 +1,9 @@
+<jboss-web>
+    <resource-ref>
+        <res-ref-name>jdbc/mailer</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <jndi-name>java:jdbc/mailer</jndi-name>
+    </resource-ref>
+</jboss-web>
+
+ 

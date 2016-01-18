@@ -1,0 +1,24 @@
+<html>
+	<head>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+		
+	</head>
+	<body>
+		<form action="hungerregister.jsp" method="POST">
+			Email: <input type="text" name="username"/>
+			Password: <input type="password" name="password"/>
+			Cofirm: <input type="password" />
+			Mobile: <input type="text" name="mobile"/>
+			<button type="submit" name="submit" value="submit">submit</button>
+		</form>
+	</body>
+	<script>
+		$(document).ready(function(){
+//			alert('asa');
+			$( "form" ).on( "submit", function( event ) {
+			  event.preventDefault();
+			  console.log( $( this ).serialize() );
+			});
+		});
+	</script>
+</html>

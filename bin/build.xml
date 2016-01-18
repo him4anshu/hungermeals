@@ -1,0 +1,41 @@
+<project name="fidloocore">
+	
+	<path id="core.path">
+		<fileset dir="${lib}">
+    		<include name="*.jar"/>
+		</fileset>
+	</path>
+    
+    <!-- - - - - - - - - - - - - - - - - - 
+          target: buildCore                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="buildCore">
+        <antcall target="compileCore"></antcall>
+        <antcall target="createCoreJar"></antcall>
+    </target>
+
+    <!-- - - - - - - - - - - - - - - - - - 
+          target: compile                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="compileCore">
+    	<javac source="6" srcdir="${coreSrc}" destdir="${classes.core}"
+    		 debuglevel="lines,vars,source" debug="true"  fork="true" 	       
+    		    		   classpathref="core.path">
+    	 <compilerarg line="-J-Xms128m -J-Xmx512m" />	
+    	</javac>
+    </target>
+    
+    <!-- - - - - - - - - - - - - - - - - - 
+          target: createCoreJar                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="createCoreJar">
+        <jar destfile="${deploy}/fidloo_core.jar"
+             basedir="${classes.core}">
+			<fileset dir="${coreSrc}">
+				
+			</fileset>
+        </jar>            
+    </target>
+
+
+</project>

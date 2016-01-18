@@ -1,0 +1,15 @@
+what,kind,bundleId,bundleVersion,description,time
+stopped,bundle,org.eclipse.jst.ws.axis2.creation.core,1.0.105.v200901220134,org.eclipse.jst.ws.axis2.creation.core,1400480743413
+stopped,bundle,org.eclipse.jst.ws.axis2.consumption.core,1.0.104.v200810151442,org.eclipse.jst.ws.axis2.consumption.core,1400480743415
+stopped,bundle,org.eclipse.jst.ws.creation.ui,1.0.308.v200901212148,org.eclipse.jst.ws.creation.ui,1400480743422
+stopped,bundle,org.eclipse.jst.ws.consumption.ui,1.1.4.v200901212148,org.eclipse.jst.ws.consumption.ui,1400480743441
+stopped,bundle,org.eclipse.jst.j2ee.webservice.ui,1.1.201.v200811062130,org.eclipse.jst.j2ee.webservice.ui,1400480743441
+stopped,bundle,org.eclipse.jst.servlet.ui,1.1.203.v200810222000,org.eclipse.jst.servlet.ui,1400480743441
+stopped,bundle,org.eclipse.jst.jee.ui,1.0.104.v200902040818,org.eclipse.jst.jee.ui,1400480743442
+stopped,bundle,org.eclipse.jst.j2ee.navigator.ui,1.1.203.v200901290400,org.eclipse.jst.j2ee.navigator.ui,1400480743442
+stopped,bundle,org.eclipse.jst.j2ee.jca.ui,1.1.200.v200805140020,org.eclipse.jst.j2ee.jca.ui,1400480743442
+stopped,bundle,org.eclipse.jst.j2ee.ui,1.1.206.v200901280857,org.eclipse.jst.j2ee.ui,1400480743442
+stopped,bundle,org.eclipse.jst.jsf.apache.trinidad.tagsupport,1.0.101.v20090128,org.eclipse.jst.jsf.apache.trinidad.tagsupport,1400480743453
+stopped,bundle,org.eclipse.jst.jsf.facesconfig.ui,1.1.3.v20090128,org.eclipse.jst.jsf.facesconfig.ui,1400480743482
+stopped,bundle,org.eclipse.jst.jsf.ui,1.1.102.v20090128,org.eclipse.jst.jsf.ui,1400480743597
+stopped,bundle,org.eclipse.jst.pagedesigner.jsf.ui,1.1.1.v20090129,org.eclipse.jst.pagedesigner.jsf.ui,1400480743697

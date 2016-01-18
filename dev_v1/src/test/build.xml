@@ -1,0 +1,76 @@
+<project name="nlcpTestCases">
+        
+    <path id="testcases.path">
+        <fileset dir="${lib}">
+            <include name="*.jar"/>            
+        </fileset>
+        <fileset dir="${deploy}" id="id">
+            <include name="fidloo_core.jar"/>            
+        </fileset>
+    </path>
+    
+    <path id="runTestCases.path">
+        <fileset dir="${lib}">
+            <include name="*.jar"/>            
+        </fileset>
+        <fileset dir="${deploy}" id="id">
+            <include name="fidloo_core.jar"/>
+			<include name="fidloo_test_cases.jar"/>
+        </fileset>
+        <pathelement location="D:/Projects/gpn_config_home/rules" />
+		<pathelement location="${classes.test}" />
+    </path>
+    
+    <!-- - - - - - - - - - - - - - - - - - 
+          target: buildTestCases
+         - - - - - - - - - - - - - - - - - -->
+    <target name="buildTestCases">
+        <antcall target="compileTestCases"></antcall>
+        <antcall target="createTestCasesJar"></antcall>
+    </target>
+
+    <!-- - - - - - - - - - - - - - - - - - 
+          target: compile                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="compileTestCases">
+        <javac source="6" srcdir="${testSrc}" destdir="${classes.test}"
+               debuglevel="lines,vars,source" debug="on"
+               classpathref="testcases.path">            
+        </javac>
+    </target>
+    
+    <!-- - - - - - - - - - - - - - - - - - 
+          target: createTestCasesJar                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="createTestCasesJar">
+        <jar destfile="${deploy}/fidloo_test_cases.jar"
+             basedir="${classes.test}">
+            <fileset dir="${testSrc}">
+                <include name="com/mailer/gpn/config/gpn-test-spring-config.xml"/>
+            </fileset>
+        </jar>            
+    </target>
+    
+    <!-- - - - - - - - - - - - - - - - - - 
+		target: runTestCases 
+	- - - - - - - - - - - - - - - - - -->
+	<target name="runTestCases">
+		<junit fork="yes" haltonfailure="yes">
+			<jvmarg value="-DGPN_CONFIG_HOME="/>
+            <batchtest fork="yes" todir="${test-reports}" >
+                <fileset dir="${classes.test}">
+                    <include name="" />
+                </fileset>
+            </batchtest>
+            <formatter type="xml" />
+            <classpath refid="runTestCases.path" />
+        </junit>
+        <junitreport todir="${test-reports}">
+            <fileset dir="${test-reports}">
+                <include name="TEST-*.xml" />
+            </fileset>
+            <report todir="${test-reports}" />
+         </junitreport>
+    </target>
+
+</project>
