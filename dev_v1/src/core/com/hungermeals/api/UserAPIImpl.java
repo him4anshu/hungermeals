@@ -6,9 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.hungermeals.facade.UserFacade;
 import com.hungermeals.persist.Address;
+import com.hungermeals.persist.MailingDetails;
 import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.OrderDetails;
 import com.hungermeals.persist.OrderStatus;
+import com.hungermeals.persist.ResponseStatus;
 import com.hungermeals.persist.User;
 import com.hungermeals.persist.User1;
 
@@ -60,6 +62,27 @@ public class UserAPIImpl implements UserAPI{
 	public List<Menu> menuDetail() {
 		return userFacade.menuDetail();
 	}
+
+	@Override
+	public List<OrderStatus> orderHistory(User user) {
+		return userFacade.orderHistory(user);
+	}
+
+	@Override
+	public OrderDetails orderDetails(OrderDetails orderDetails) {
+		return userFacade.orderDetails(orderDetails);
+	}
+
+	@Override
+	public String sendMail(MailingDetails mailingDetails) {
+		return userFacade.sendMail(mailingDetails);
+	}
+
+	@Override
+	public ResponseStatus getotp(String phoneNo) {
+		return userFacade.getotp(phoneNo);
+	}
+
 
 	
 

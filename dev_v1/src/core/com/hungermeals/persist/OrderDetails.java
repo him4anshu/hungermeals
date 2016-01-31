@@ -10,6 +10,7 @@ public class OrderDetails {
 	private User user;
 	private List<Item> itemList;
 	private Order orderInfo;
+	private OrderStatus orderStatus;
 	
 	public User getUser() {
 		return user;
@@ -28,6 +29,12 @@ public class OrderDetails {
 	}
 	public void setOrderInfo(Order orderInfo) {
 		this.orderInfo = orderInfo;
+	}
+	public OrderStatus getOrderStatus() {
+		return orderStatus;
+	}
+	public void setOrderStatus(OrderStatus orderStatus) {
+		this.orderStatus = orderStatus;
 	}
 	
 }

@@ -24,7 +24,9 @@ public class User {
 	private boolean userStatus;
 	private Date logTime;
 	private String uCode;
-
+	
+	private String userType;
+	private ResponseStatus responseStatus;
 	public long getUserId() {
 		return userId;
 	}
@@ -143,6 +145,22 @@ public class User {
 
 	public void setAddress(Address address) {
 		this.address = address;
+	}
+
+	public String getUserType() {
+		return userType;
+	}
+
+	public void setUserType(String userType) {
+		this.userType = userType;
+	}
+
+	public ResponseStatus getResponseStatus() {
+		return responseStatus;
+	}
+
+	public void setResponseStatus(ResponseStatus responseStatus) {
+		this.responseStatus = responseStatus;
 	}	
 	
 	

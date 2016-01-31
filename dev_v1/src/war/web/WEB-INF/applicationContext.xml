@@ -39,7 +39,8 @@
 		</property>
 	</bean>
 	
-	<bean id="configReader" class="com.hungermeals.common.ConfigReader"></bean>
+	<bean id="configReader" class="com.hungermeals.common.ConfigReader"/>
+	<bean id="smsThirdPartyService" class="com.hungermeals.common.SMSThirdPartyService"/>
 
 	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
 		<property name="driverClassName">
@@ -80,21 +81,52 @@
 
 	
 	<!--Hungermeals Project configuration  -->
+		<!-- USER MODULE START -->
 		<bean id="userAPI" class="com.hungermeals.api.UserAPIImpl"/>
 		<bean id="userFacade" class="com.hungermeals.facade.UserFacadeImpl"/>
 		<bean id="userDAO" class="com.hungermeals.dao.UserDAOImpl">
 		<property name="dataSource" ref="dataSource"/>
 		</bean>
-
-
 		<bean id="userController" class="com.hungermeals.controller.UserController">
 		</bean>
+		<!-- USER MODULE END-->
 		
+		<!-- ADMIN MODULE START -->
+		<bean id="adminAPI" class="com.hungermeals.api.AdminAPIImpl"/>
+		<bean id="adminFacade" class="com.hungermeals.facade.AdminFacadeImpl"/>
+		<bean id="adminDAO" class="com.hungermeals.dao.AdminDAOImpl">
+		<property name="dataSource" ref="dataSource"/>
+		</bean>
+		<bean id="adminController" class="com.hungermeals.controller.AdminController">
+		</bean>
+		<!-- ADMIN MODULE END -->
+		
+	<bean id="mailSender"
+        class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="${smtp.host}" />
+		<property name="username" value="${smtp.username}" />
+		<property name="port" value="${smtp.port}" />
+		<property name="password" value="${smtp.password}" />
+		<property name="javaMailProperties">
+		<props>
+		<prop key="mail.smtp.auth">true</prop>
+		</props>
+		</property>
+	</bean>	
 	
 	
-	<jaxrs:server id="restServer" address="/json">
+	<jaxrs:server id="userservice" address="/userservices">
 		<jaxrs:serviceBeans>
 			<ref bean="userController" />
+		</jaxrs:serviceBeans>
+		<jaxrs:providers>
+			<ref bean="jaxbProvider" />
+		</jaxrs:providers>
+	</jaxrs:server>
+	
+	<jaxrs:server id="adminService" address="/adminservices">
+		<jaxrs:serviceBeans>
+			<ref bean="adminController" />
 		</jaxrs:serviceBeans>
 		<jaxrs:providers>
 			<ref bean="jaxbProvider" />

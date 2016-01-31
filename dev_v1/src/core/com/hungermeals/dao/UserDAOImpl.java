@@ -8,27 +8,51 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 
+import javax.mail.Multipart;
+import javax.mail.internet.MimeMessage;
 import javax.sql.DataSource;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.mail.javamail.MimeMessagePreparator;
 
+import com.hungermeals.common.ConfigReader;
+import com.hungermeals.common.TemplateProcessing;
+import com.hungermeals.handler.TemplateDetailsRowMapper;
+import com.hungermeals.handler.UserDetailsRowMapper;
 import com.hungermeals.persist.Address;
 import com.hungermeals.persist.Item;
+import com.hungermeals.persist.MailerBean;
+import com.hungermeals.persist.MailingDetails;
 import com.hungermeals.persist.Menu;
+import com.hungermeals.persist.Order;
 import com.hungermeals.persist.OrderDetails;
 import com.hungermeals.persist.OrderStatus;
+import com.hungermeals.persist.ResponseStatus;
+import com.hungermeals.persist.TemplateBean;
 import com.hungermeals.persist.User;
 import com.hungermeals.persist.User1;
+import com.hungermeals.persist.UserBean;
+
+
 
 
 public class UserDAOImpl implements UserDAO{
+	@Autowired
+	private JavaMailSender mailSender;
+	@Autowired
+	private ConfigReader configReader;
+	
 	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 	private JdbcTemplate jdbcTemplate;
 	private SimpleJdbcInsert insertIntoUserTable;
@@ -63,14 +87,19 @@ public class UserDAOImpl implements UserDAO{
 	@Override
 	public User userRegistration(User user) {
 			//Checking already registered email
+			ResponseStatus response=new ResponseStatus();
+			user.setResponseStatus(response);
 			MapSqlParameterSource paramMap=new MapSqlParameterSource();
 			paramMap.addValue("EMAIL",user.getEmail());	
-			String trackCountSql="SELECT count(*) FROM user WHERE EMAIL=:EMAIL";
+			String trackCountSql="SELECT count(*) FROM user WHERE EMAIL=:EMAIL OR PHONE=:PHONE";
 			int tCount = 0;
 			try {
 				tCount=namedParameterJdbcTemplate.queryForInt(trackCountSql, paramMap);
 			} catch (DataAccessException e) {
 				e.printStackTrace();
+				response.setResponseCode("HM103");
+				response.setResponseMessage(configReader.getValue("HM103"));
+				response.setErrorDetails(e.getMessage());
 				user.setUserStatus(false);
 			}
 		
@@ -82,7 +111,9 @@ public class UserDAOImpl implements UserDAO{
 				newUserInsert.addValue("EMAIL", user.getEmail());
 				newUserInsert.addValue("ENC_EMAIL", user.getEncEmail());
 				newUserInsert.addValue("ENC_PASSWORD", user.getPassword1());
+				newUserInsert.addValue("PHONE", user.getMobile());
 				newUserInsert.addValue("STATUS", "A");
+				newUserInsert.addValue("USER_TYPE", user.getUserType());
 				String ucode=UUID.randomUUID().toString();
 				newUserInsert.addValue("USER_CODE", ucode);			
 				try {
@@ -95,9 +126,44 @@ public class UserDAOImpl implements UserDAO{
 					}catch (Exception e) {
 						user.setUserStatus(false);
 						e.printStackTrace();
+						response.setResponseCode("HM103");
+						response.setResponseMessage(configReader.getValue("HM103"));
+						response.setErrorDetails(e.getMessage());
 					}			
-			}else{
-				user.setUserStatus(false);
+			}else if("HM".equals(user.getUserType())){
+				response.setResponseCode("HM201");
+				response.setResponseMessage(configReader.getValue("HM201"));
+				user.setUserStatus(false); //Already registered
+			}else{//i.e user already came from FB or GMAIL
+				response.setResponseCode("HM202");
+				response.setResponseMessage(configReader.getValue("HM202"));
+				MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
+				mapSqlParameterSource.addValue("EMAIL", user.getEmail());
+				String userIdQuery = "SELECT USER_ID,FIRST_NAME,USER_CODE,EMAIL FROM user WHERE EMAIL=:EMAIL  AND STATUS='A'";
+				try {
+					user=(User) namedParameterJdbcTemplate.queryForObject(userIdQuery,mapSqlParameterSource, new RowMapper(){
+						@Override
+						public Object mapRow(ResultSet rs, int arg1)
+								throws SQLException {
+							User user = new User();
+							user.setUserId(rs.getInt("USER_ID"));
+							user.setUserStatus(true);
+							user.setLogTime(new Date());
+							user.setuCode(rs.getString("USER_CODE"));
+							user.setuName(rs.getString("EMAIL"));
+							return user;
+						}
+					});
+				} catch (DataAccessException e) {
+					e.printStackTrace();
+					response.setResponseCode("HM103");
+					response.setResponseMessage(configReader.getValue("HM103"));
+					response.setErrorDetails(e.getMessage());
+					user.setUserStatus(false);
+				}
+				return user;
+			
+			
 			}
 	  return user;
 	}
@@ -127,10 +193,12 @@ public class UserDAOImpl implements UserDAO{
 	
 	@Override
 	public User logedInUserProfile(User user) {
+		ResponseStatus response=new ResponseStatus();
+		user.setResponseStatus(response);
 		MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
 		mapSqlParameterSource.addValue("EMAIL", user.getEmail());
 		mapSqlParameterSource.addValue("E_PASSWORD", user.getPassword1());
-		String userIdQuery = "SELECT USER_ID,FIRST_NAME,USER_CODE,EMAIL FROM user WHERE EMAIL=:EMAIL AND ENC_PASSWORD=:E_PASSWORD AND STATUS='A'";
+		String userIdQuery = "SELECT USER_ID,FIRST_NAME,USER_CODE,EMAIL,PHONE FROM user WHERE (EMAIL=:EMAIL OR PHONE=:EMAIL) AND (ENC_PASSWORD=:E_PASSWORD OR OTP=:E_PASSWORD) AND STATUS='A'";
 		try {
 			user=(User) namedParameterJdbcTemplate.queryForObject(userIdQuery,mapSqlParameterSource, new RowMapper(){
 				@Override
@@ -142,11 +210,15 @@ public class UserDAOImpl implements UserDAO{
 					user.setLogTime(new Date());
 					user.setuCode(rs.getString("USER_CODE"));
 					user.setuName(rs.getString("EMAIL"));
+					user.setMobile(rs.getString("PHONE"));
 					return user;
 				}
 			});
 		} catch (DataAccessException e) {
 			e.printStackTrace();
+			response.setResponseCode("HM103");
+			response.setResponseMessage(configReader.getValue("HM103"));
+			response.setErrorDetails(e.getMessage());
 			user.setUserStatus(false);
 		}
 		return user;
@@ -155,6 +227,8 @@ public class UserDAOImpl implements UserDAO{
 
 	@Override
 	public User addUserAddress(User user) {
+		ResponseStatus response=new ResponseStatus();
+		user.setResponseStatus(response);
 		MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
 		mapSqlParameterSource.addValue("EMAIL", user.getuName());
 		mapSqlParameterSource.addValue("USER_CODE", user.getuCode());
@@ -178,12 +252,18 @@ public class UserDAOImpl implements UserDAO{
 					user.setAddress(address);
 					user.setUserStatus(true);
 					}catch (Exception e) {
-						user.setUserStatus(false);
 						e.printStackTrace();
+						response.setResponseCode("HM103");
+						response.setResponseMessage(configReader.getValue("HM103"));
+						response.setErrorDetails(e.getMessage());
+						user.setUserStatus(false);
 					}
 			}
 		} catch (DataAccessException e) {
 			e.printStackTrace();
+			response.setResponseCode("HM103");
+			response.setResponseMessage(configReader.getValue("HM103"));
+			response.setErrorDetails(e.getMessage());
 			user.setUserStatus(false);
 		}
 		return user;
@@ -191,6 +271,7 @@ public class UserDAOImpl implements UserDAO{
 
 	@Override
 	public List<Address> getUserAddress(User user) {
+		ResponseStatus response=new ResponseStatus();
 		List<Address> addressList=new ArrayList<Address>();
 		MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
 		mapSqlParameterSource.addValue("EMAIL", user.getuName());
@@ -217,12 +298,16 @@ public class UserDAOImpl implements UserDAO{
 			});
 		} catch (DataAccessException e) {
 			e.printStackTrace();
+			response.setResponseCode("HM103");
+			response.setResponseMessage(configReader.getValue("HM103"));
+			response.setErrorDetails(e.getMessage());
 		}
 		return addressList;
 	}
 
 	@Override
 	public OrderStatus orderConfirm(OrderDetails orderDetails) {
+		ResponseStatus response=new ResponseStatus();
 		OrderStatus orderStatus=new  OrderStatus();
 		int orderId=0;
 		int userId=getUserIdByUserCode(orderDetails.getUser());
@@ -233,7 +318,7 @@ public class UserDAOImpl implements UserDAO{
 		newOrderInsert.addValue("ADDRESS_ID", addressId);
 		newOrderInsert.addValue("DELIVERY_CHARGES", orderDetails.getOrderInfo().getDeliveryCharges());
 		newOrderInsert.addValue("TOTAL_AMOUNT", orderDetails.getOrderInfo().getTotalAmount());
-		//newOrderInsert.addValue("DELIVERY_TIME", orderDetails.getOrderInfo().getDeliveryTime());
+		newOrderInsert.addValue("DELIVERY_TIME", orderDetails.getOrderInfo().getDeliveryTime());
 		newOrderInsert.addValue("STATUS", "A");
 		newOrderInsert.addValue("CREATION_DATE", new Date());//"2016-01-12 21:50:24");
 		newOrderInsert.addValue("MODIFIED_DATE", new Date());	
@@ -242,9 +327,11 @@ public class UserDAOImpl implements UserDAO{
 
 		try{
 			orderId=insertIntoOrderTable.executeAndReturnKey(newOrderInsert).intValue();
-			orderStatus.setOrderStatus("Order placed");
+			orderStatus.setOrderStatusDesc("Order placed");
+			orderStatus.setOrderStatusCode(1);
 			}catch (Exception e) {
-				orderStatus.setOrderStatus("Order couldn't able to place ");
+				orderStatus.setOrderStatusDesc("Order couldn't able to place ");
+				orderStatus.setOrderStatusCode(0);
 				e.printStackTrace();
 			}			
 		List<Item> itemList=orderDetails.getItemList();
@@ -258,14 +345,18 @@ public class UserDAOImpl implements UserDAO{
 			try{
 				insertIntoOrderItemTable.executeAndReturnKey(newItemInsert).intValue();			
 			}catch (Exception e) {
-				orderStatus.setOrderStatus("Order couldn't able to place ");
-				e.printStackTrace();
+				orderStatus.setOrderStatusDesc("Order couldn't able to place ");
+				orderStatus.setOrderStatusCode(0);
+				response.setResponseCode("HM103");
+				response.setResponseMessage(configReader.getValue("HM103"));
+				response.setErrorDetails(e.getMessage());
+				
 			}
 
 		}	
 		orderStatus.setOrderId(orderId);
-		orderStatus.setExecutiveName("MK Jacob");
-		orderStatus.setExecutivePhone("8123719594");
+		orderStatus.setExecutiveName("MK Jcob");
+		orderStatus.setExecutivePhone("7829777997");
 		return orderStatus;
 	}
 
@@ -323,6 +414,7 @@ public class UserDAOImpl implements UserDAO{
 	}
 
 	private int getUserIdByUserCode(User user){
+		ResponseStatus response=new ResponseStatus();
 		MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
 		mapSqlParameterSource.addValue("EMAIL", user.getuName());
 		mapSqlParameterSource.addValue("USER_CODE", user.getuCode());
@@ -331,9 +423,408 @@ public class UserDAOImpl implements UserDAO{
 		try {
 			userId= namedParameterJdbcTemplate.queryForInt(userIdQuery,mapSqlParameterSource);
 		}catch(Exception e){
-			e.printStackTrace();
+			response.setResponseCode("HM103");
+			response.setResponseMessage(configReader.getValue("HM103"));
+			response.setErrorDetails(e.getMessage());
 		}
 		return userId;
 	}
+
+	@Override
+	public List<OrderStatus> orderHistory(User user) {
+		int userId=getUserIdByUserCode(user);
+		List<OrderStatus> orderStatusList=new ArrayList<OrderStatus>();
+		MapSqlParameterSource mapSqlParameterSourceAddress = new MapSqlParameterSource();
+		mapSqlParameterSourceAddress.addValue("USER_ID", userId);
+		String orderStatusQuery="SELECT O.ORDER_ID,O.TOTAL_AMOUNT,OSC.STATUS_CODE,OSC.DESCRIPTION,OS.EXECUTIVE_NAME,OS.EXECUTIVE_PHONE "
+				+"  FROM order_details O"
+				+"	JOIN order_status OS ON O.ORDER_ID=OS.ORDER_ID AND O.STATUS='A'"
+				+"	JOIN order_status_category OSC ON OS.ORDER_STATUS_ID=OSC.STATUS_CODE"
+				+"	WHERE O.USER_ID=:USER_ID ORDER BY O.ORDER_ID DESC";
+		
+		orderStatusList=namedParameterJdbcTemplate.query(orderStatusQuery,mapSqlParameterSourceAddress, new RowMapper() {
+			@Override
+			public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
+				OrderStatus orderStatus =new OrderStatus();
+				orderStatus.setOrderId(rs.getLong("ORDER_ID"));
+				orderStatus.setTotalAmount(rs.getString("TOTAL_AMOUNT"));
+				orderStatus.setOrderStatusDesc(rs.getString("OSC.DESCRIPTION"));
+				orderStatus.setOrderStatusCode(rs.getInt("OSC.STATUS_CODE"));
+				orderStatus.setExecutiveName(rs.getString("EXECUTIVE_NAME"));
+				orderStatus.setExecutivePhone(rs.getString("EXECUTIVE_PHONE"));
+				return orderStatus;
+			}
+		});
+		return orderStatusList;
+	}
+
+	@Override
+	public OrderDetails orderDetails(final OrderDetails orderDetail) {
+		int userId=getUserIdByUserCode(orderDetail.getUser());
+		MapSqlParameterSource mapSqlParameterSourceAddress = new MapSqlParameterSource();
+		mapSqlParameterSourceAddress.addValue("ORDER_ID", orderDetail.getOrderInfo().getOrderId());
+		mapSqlParameterSourceAddress.addValue("USER_ID", userId);
+		String orderDetailsQuery ="SELECT OD.USER_ID,OD.ORDER_ID,OD.ADDRESS_ID,OD.TOTAL_AMOUNT,"
+				+	" OD.DELIVERY_CHARGES,OD.PAYMENT_MODE,OD.COUPON_CODE,OD.DELIVERY_TIME,"
+				+ 	" U.FIRST_NAME,U.EMAIL,U.PHONE,U.USER_CODE,U.USER_TYPE,"
+				+	" UA.NAME,UA.PHONE,UA.LINE_1_BUILDING_NO,UA.LINE_2_STREET_NO,UA.CITY,"
+				+	" UA.STATE,UA.PINCODE,OS.ORDER_STATUS_ID,OS.EXECUTIVE_NAME,OS.EXECUTIVE_PHONE, "
+				+	" I.DESCRIPTION,I.ITEM_NAME,I.ITEM_ID,OID.NO_OF_ITEM,I.ITEM_PRICE"
+				+   " FROM order_details OD"
+				+	" JOIN user U ON OD.USER_ID=U.USER_ID"
+				+	" JOIN order_item_details OID ON OD.ORDER_ID=OID.ORDER_ID"
+				+	" JOIN item I ON OID.ITEM_ID=I.ITEM_ID"
+				+	" JOIN user_address UA on OD.ADDRESS_ID=UA.USER_ADDRESS_ID"
+				+	" JOIN order_status OS ON OD.ORDER_ID=OS.ORDER_ID"
+				+	" WHERE OD.ORDER_ID=:ORDER_ID AND OD.USER_ID=:USER_ID ";
+
+		System.out.println(orderDetailsQuery);
+		//OrderDetails orderDetails = new OrderDetails();
+		final OrderDetails orderDetails=new OrderDetails();
+		orderDetails.setItemList(new ArrayList<Item>());
+		
+		List<OrderDetails> orderDetailsList=namedParameterJdbcTemplate.query(orderDetailsQuery,mapSqlParameterSourceAddress, new RowMapper() {
+			@Override
+			public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
+				
+				//User user =new User();
+				OrderStatus orderStatus1 =new OrderStatus();
+						if (rowNum == 1) {
+							/*Getting address data*/
+							Address address = new  Address();
+							address.setAddressId(rs.getInt("ADDRESS_ID"));
+							address.setCity(rs.getString("CITY"));
+							address.setLine1BuildingNo(rs.getString("LINE_1_BUILDING_NO"));
+							address.setLine2StreetNo(rs.getString("LINE_2_STREET_NO"));
+							address.setpCode(rs.getString("PINCODE"));
+							address.setPhone(rs.getString("PHONE"));
+							address.setState(rs.getString("STATE"));
+							
+							/*Getting user details*/
+							User user=new User();
+							user.setuName(rs.getString("EMAIL"));
+							user.setuCode(rs.getString("USER_CODE"));
+							user.setUserId(rs.getInt("USER_ID"));
+							user.setAddress(address);
+							
+							 
+							/*Getting Order details*/
+							Order order=new Order();
+							order.setOrderId(rs.getInt("ORDER_ID"));
+							order.setCouponCode(rs.getString("COUPON_CODE"));
+							order.setDeliveryCharges(rs.getDouble("DELIVERY_CHARGES"));
+							try {
+								order.setDeliveryTime(rs.getDate("DELIVERY_TIME"));
+							} catch (Exception e) {
+								order.setDeliveryTime(null);
+							}
+							order.setTotalAmount(rs.getDouble("TOTAL_AMOUNT"));
+							order.setPaymentMode(rs.getString("PAYMENT_MODE"));
+							
+						
+							/*Getting Order status*/
+							OrderStatus orderStatus=new OrderStatus();
+							orderStatus.setOrderId(rs.getInt("ORDER_ID"));
+							orderStatus.setOrderStatusCode(rs.getInt("ORDER_STATUS_ID"));
+							orderStatus.setExecutiveName(rs.getString("EXECUTIVE_NAME"));
+							orderStatus.setExecutivePhone(rs.getString("EXECUTIVE_PHONE"));
+
+							orderDetails.setOrderInfo(order);
+							orderDetails.setOrderStatus(orderStatus);
+							orderDetails.setUser(user);
+						}
+						
+						Item item = new Item();
+						item.setDescription(rs.getString("DESCRIPTION"));
+						item.setItemName(rs.getString("ITEM_NAME"));
+						item.setItemId(rs.getInt("ITEM_ID"));
+						item.setNumberOfItems(rs.getInt("NO_OF_ITEM"));
+						item.setPerItemCost(rs.getFloat("ITEM_PRICE"));	
+						orderDetails.getItemList().add(item);
+				
+				return orderDetails;
+			}
+		});
+		return orderDetails;
+	}
+
+	@Override
+	public String sendMail(MailingDetails mailingDetails) {
+		/*Getting template dependent details*/
+		//tempalateId="3";
+		TemplateBean templateBean=templateDependentDeatils(mailingDetails.getTemplateId());
+		
+		/*Getting user dependent details*/
+		//userID="123";flag="1";
+		List<UserBean> userBean=userListDetails(mailingDetails.getUcode(),"12");
+		
+		/*Getting template links details*/
+		List<MailerBean> templateDetails=getTemplateLinkDetails(mailingDetails.getTemplateId());
+		
+		/*Getting mail content from mail templates*/
+		UserBean user=userBean.get(0);
+		TemplateProcessing tmp=new TemplateProcessing();
+		Multipart mailContent=tmp.processTemplate(templateDetails, templateBean, user);
+		
+		int flag=sendEmail(user,templateBean,mailContent);
+		
+		if(flag==1)
+			return "SUCCESS";
+		else 
+			return "ERROR";
+	}
+	
+	private List<MailerBean> getTemplateLinkDetails(int templateId) {
+
+		List<MailerBean> templateLinkList=new ArrayList<MailerBean>();
+		MapSqlParameterSource paramMap=new MapSqlParameterSource();
+		paramMap.addValue("TEMPLATE_ID", templateId);
+			try {			
+				/************Get the text body from the db**************/
+				String subSQL="SELECT textbody FROM template where template_id=:TEMPLATE_ID and status='A' ";
+				MailerBean sub=(MailerBean) namedParameterJdbcTemplate.queryForObject(subSQL,paramMap, new RowMapper(){
+					@Override
+					public Object mapRow(ResultSet rs, int arg1)
+							throws SQLException {
+						MailerBean user = new MailerBean();
+						user.setTEXTBody(rs.getString("textbody"));
+						return user;
+					}
+				});
+				System.out.println("text in dao while sending emails------>"+sub.getTEXTBody());
+
+				/************************/
+				String linkSql="SELECT lp.parameter_name,lp.tracking_link,lp.type FROM BV_TEMPLATE_LINKS tl " +
+						"join BV_LINKS_PARAMETER lp on lp.l_id=tl.lp_id and lp.status='a' where " +
+						"tl.T_ID=:TEMPLATE_ID and tl.STATUS='A'";
+				List<MailerBean> templateLinkList1=namedParameterJdbcTemplate.query(linkSql, paramMap, new RowMapper() {
+					@Override
+					public Object mapRow(ResultSet rs, int arg1)
+							throws SQLException {
+						MailerBean services=new MailerBean();
+						services.setLinkParameter(rs.getString("parameter_name"));
+						services.setTrackingLink(rs.getString("tracking_link"));
+						services.setParameterType(rs.getString("type"));
+						
+						return services;
+					}
+				});
+				System.out.println("templateLinkList1 size----->"+templateLinkList1.size());
+				sub.setTemplateLinkList(templateLinkList1);
+				templateLinkList.add(sub);
+				System.out.println("sub object templateLinkList size---->"+templateLinkList.size());
+			} catch (Exception e) {
+				// TODO: handle exception
+				e.printStackTrace();
+			}
+			return templateLinkList;
+	
+	}
+
+	private TemplateBean templateDependentDeatils(int templateId){
+        TemplateBean bean=new TemplateBean();
+		try {
+			String sendingDetailsQuery="SELECT * FROM template_details WHERE STATUS='A' AND TEMPLATE_ID="+templateId;
+			bean=namedParameterJdbcTemplate.queryForObject(sendingDetailsQuery, new HashMap(), new TemplateDetailsRowMapper());
+			System.out.println("Sending Details Query"+sendingDetailsQuery);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return bean;
+	}
+	
+	private List<UserBean> userListDetails(String userID, String flag) {
+		List<UserBean> userListDetail=new ArrayList<UserBean>();
+		
+		/*Fetching required query for getting dynamic details in template*/
+		MailerBean filterObject=new MailerBean();
+		String fetchingQuery="SELECT QUERY FROM mail_template.QUERY_DETAILS WHERE QUERY_ID="+flag;
+		filterObject=(MailerBean) namedParameterJdbcTemplate.queryForObject(fetchingQuery, new HashMap(), new RowMapper() {
+			@Override
+			public Object mapRow(ResultSet rs, int arg1)
+					throws SQLException {
+				MailerBean services=new MailerBean();
+				services.setFilterConditions(rs.getString("QUERY"));
+				return services;
+			}
+		});			
+		String requiredQuery=filterObject.getFilterConditions();
+		String GPN_ID="GPN_ID";
+		String IdList[]=userID.split("@");
+		for (int i =1; i < IdList.length+1; i++) {
+			GPN_ID=GPN_ID+"_"+i;
+			String temp=GPN_ID;
+			System.out.println("creating GPN_ID="+GPN_ID);
+			GPN_ID=IdList[i-1];
+			System.out.println("Final GPN_ID="+GPN_ID);
+			if(requiredQuery.contains("${GPN_ID_"+i+"}")){
+				requiredQuery=requiredQuery.replace("${GPN_ID_"+i+"}",GPN_ID);
+			}
+			/*if(requiredQuery.contains("${GPN_ID_1}") && i==1){
+				requiredQuery=requiredQuery.replace("${GPN_ID_1}",GPN_ID);
+			}else if (requiredQuery.contains("${GPN_ID_2}") && i==2) {
+				requiredQuery=requiredQuery.replace("${GPN_ID_2}",GPN_ID);
+			}else if (requiredQuery.contains("${GPN_ID_3}") && i==3) {
+				requiredQuery=requiredQuery.replace("${GPN_ID_3}",GPN_ID);
+			}*/
+		}		
+		System.out.println("User information select query-: "+requiredQuery);
+		userListDetail=userListDetails(requiredQuery);
+		
+		List<UserBean> newUserListDetail=new ArrayList<UserBean>();
+		
+		/*Inserting user details into other table for tracking purpose*/
+		for (UserBean userDetail : userListDetail) {}
+		return newUserListDetail;
+	
+	}
+	public List<UserBean> userListDetails(String query) {
+		List<UserBean> userListDetail=new ArrayList<UserBean>();
+		MapSqlParameterSource paramMap=new MapSqlParameterSource();
+		String userDetailSql=null;
+		userDetailSql=query;
+		try {
+			userListDetail=namedParameterJdbcTemplate.query(userDetailSql, new HashMap(), new UserDetailsRowMapper());
+		} catch (DataAccessException e) {
+			System.out.println("No results found");
+			e.printStackTrace();
+		}
+		return userListDetail;
+	}
+	
+	public int sendEmail(UserBean userBean,TemplateBean templateBean,Multipart mp){
+		int flag=0;
+		final Multipart mailContent=mp; 
+		final String from=templateBean.getSenderEmail();
+		System.out.println("FROM ="+from);
+		final String fromName=templateBean.getSenderName(); 
+		/*Making subject as dynamic*/
+		String dynamicSubject="";
+		if(templateBean.getSubject().contains("${")){
+			//dynamicSubject="Dynamic subject under process";
+			System.out.println("Subject from DB"+templateBean.getSubject());
+			if(userBean.getDynamicSubjectV1()!=null)
+			dynamicSubject=templateBean.getSubject().replace("${DSV1}",userBean.getDynamicSubjectV1());
+			if(userBean.getDynamicSubjectV2()!=null)
+			dynamicSubject=dynamicSubject.replace("${DSV2}",userBean.getDynamicSubjectV2());
+			if(userBean.getDynamicSubjectV3()!=null)
+			dynamicSubject=dynamicSubject.replace("${DSV3}",userBean.getDynamicSubjectV3());
+			System.out.println("Final Subject"+dynamicSubject);
+		}else{
+			dynamicSubject=templateBean.getSubject();
+		}
+		final String subject=dynamicSubject;
+		final String replyToName=templateBean.getReplyToName();
+		final String replyToEmail=templateBean.getReplyToEmail();
+		
+		/*temp variable to avoid null pointer exception*/
+		String t1[]=null;
+		String t2[]=null;
+		String t3[]=null;
+		try {
+			t1=templateBean.getCcEmailDetails().split(";");
+			System.out.println("CC Emails"+t1);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			System.out.println("CC Emails"+t1);
+			//e.printStackTrace();
+		}
+		try {
+			t2=templateBean.getBccEmialDetails().split(";");
+			System.out.println("BCC Emails"+t2);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			System.out.println("BCC Emails"+t2);
+			//e.printStackTrace();
+		}
+		try {
+			t3=userBean.getUserEmail().split(";");
+			System.out.println("To Emails"+t3);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			System.out.println("To Emails"+t3);
+			//e.printStackTrace();
+		} 
+		
+		final String cc[]=t1;
+		final String bcc[]=t2;
+		final String[] to=t3;
+
+		System.out.println("in send  Email EmailUtils");
+		MimeMessagePreparator preparator = new MimeMessagePreparator() {
+			public void prepare(MimeMessage mimeMessage) throws Exception {
+				try {
+					MimeMessageHelper message = new MimeMessageHelper(mimeMessage);
+					final  String[] newTo=new String[1000];
+					System.out.println("TO++    "+to[0]);
+					int flag=0;
+					String[] updateTo=new String[50];
+					if(to[0].contains(";")){
+						flag=1;
+						updateTo=to[0].split(";");
+					}
+					if(flag==1){
+						message.setTo(updateTo);
+					}else{
+						message.setTo(to);
+					}
+					System.out.println("To address is set");
+					if(bcc!=null){
+						int fg=0;
+						String[] updTo=new String[50];
+						if(bcc[0].contains(";")){
+							fg=1;
+							updTo=bcc[0].split(";");
+					    }
+						if(fg==1){
+						System.out.println("BCC:"+updTo);
+					  	message.setBcc(updTo);
+						}else{
+							System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!BCC:"+bcc);
+							message.setBcc(bcc);
+						}
+					}
+					message.setFrom(from,fromName);
+					System.out.println("in preparator");
+					message.setSubject(subject);
+					
+					//InternetAddress[] replyAdrr={new InternetAddress("infiniti4bangalore@gmail.com","Bvibes")};
+					message.setReplyTo(replyToEmail, replyToName);
+					
+
+					//System.out.println("email message is: " + text);
+					//message.setText(text, true);
+					mimeMessage.setContent(mailContent);
+					
+					System.out.println("email message is set  ");
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		};
+		try {
+			mailSender.send(preparator);
+			System.out.println("Mail send sucessfully");
+			flag=1;
+		} catch (Exception e1) {
+			System.out.println("Error in sending mail");
+			flag=0;
+			e1.printStackTrace();
+		}
+		return flag;
+
+	}
+
+	@Override
+	public String getotp(String phoneNo,String otp) throws Exception{
+		String updateOtp="UPDATE user SET OTP='"+otp+"' WHERE phone='"+phoneNo+"'";
+		int updateResult=namedParameterJdbcTemplate.update(updateOtp, new MapSqlParameterSource());
+		if(updateResult==0)
+			return "FAIL";
+		else
+			return otp+"";
+	}
+	
 	
 }

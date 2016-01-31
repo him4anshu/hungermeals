@@ -7,7 +7,11 @@ public class OrderStatus {
 	private long orderId;
 	private String executiveName;
 	private String executivePhone;
-	private String orderStatus;
+	private String orderStatusDesc;
+	private int orderStatusCode;
+	private String totalAmount;
+	private String userPhone;
+	
 	public long getOrderId() {
 		return orderId;
 	}
@@ -26,11 +30,31 @@ public class OrderStatus {
 	public void setExecutivePhone(String executivePhone) {
 		this.executivePhone = executivePhone;
 	}
-	public String getOrderStatus() {
-		return orderStatus;
+	
+	public String getOrderStatusDesc() {
+		return orderStatusDesc;
 	}
-	public void setOrderStatus(String orderStatus) {
-		this.orderStatus = orderStatus;
+	public void setOrderStatusDesc(String orderStatusDesc) {
+		this.orderStatusDesc = orderStatusDesc;
 	}
+	public String getTotalAmount() {
+		return totalAmount;
+	}
+	public void setTotalAmount(String totalAmount) {
+		this.totalAmount = totalAmount;
+	}
+	public int getOrderStatusCode() {
+		return orderStatusCode;
+	}
+	public void setOrderStatusCode(int orderStatusCode) {
+		this.orderStatusCode = orderStatusCode;
+	}
+	public String getUserPhone() {
+		return userPhone;
+	}
+	public void setUserPhone(String userPhone) {
+		this.userPhone = userPhone;
+	}
+	
 	
 }

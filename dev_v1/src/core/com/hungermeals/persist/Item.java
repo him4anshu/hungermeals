@@ -1,9 +1,10 @@
 package com.hungermeals.persist;
 
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name="item")
-public class Item {
+public class Item/* implements Serializable*/{
 
 	private int itemId;
 	private String itemName;

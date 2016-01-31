@@ -5,7 +5,7 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name="menu")
-public class Menu {
+public class Menu/* implements Serializable*/{
 	private long menuId;
 	private String name;
 	private String description;

@@ -15,9 +15,11 @@ import com.hungermeals.api.UserAPI;
 import com.hungermeals.common.SMSThirdPartyService;
 import com.hungermeals.dao.UserDAO;
 import com.hungermeals.persist.Address;
+import com.hungermeals.persist.MailingDetails;
 import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.OrderDetails;
 import com.hungermeals.persist.OrderStatus;
+import com.hungermeals.persist.ResponseStatus;
 import com.hungermeals.persist.User;
 import com.hungermeals.persist.User1;
 
@@ -99,6 +101,32 @@ public class UserController {
 	public List<Menu> menuDetail(){
 		return userAPI.menuDetail();
 	}
-
 	
+	@POST
+	@Path("/orderHistory.json")
+    @Produces("application/json")
+	public List<OrderStatus> orderHistory(User user){
+		return userAPI.orderHistory(user);
+	}
+	
+	@POST
+	@Path("/orderDetails.json")
+    @Produces("application/json")
+	public OrderDetails orderDetails(OrderDetails orderDetails){
+		return userAPI.orderDetails(orderDetails);
+	}
+
+	@POST
+	@Path("/sendmail.json")
+    @Produces("application/json")
+	public String sendMail(MailingDetails mailingDetails){
+		return userAPI.sendMail(mailingDetails);
+	}
+	
+	@GET
+	@Path("/getotp.json/{phoneNo}")
+    @Produces("application/json")
+	public ResponseStatus getotp(@PathParam("phoneNo") String phoneNo){
+		return userAPI.getotp(phoneNo);
+	}
 }
