@@ -13,6 +13,7 @@ public class Order {
 	private double totalAmount;
 	private Date deliveryTime;
 	private String couponCode;
+	private String deliverySlot;
 	public long getOrderId() {
 		return orderId;
 	}
@@ -48,6 +49,12 @@ public class Order {
 	}
 	public void setCouponCode(String couponCode) {
 		this.couponCode = couponCode;
+	}
+	public String getDeliverySlot() {
+		return deliverySlot;
+	}
+	public void setDeliverySlot(String deliverySlot) {
+		this.deliverySlot = deliverySlot;
 	}
 	
 }

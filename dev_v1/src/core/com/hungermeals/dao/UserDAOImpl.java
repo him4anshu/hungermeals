@@ -319,6 +319,7 @@ public class UserDAOImpl implements UserDAO{
 		newOrderInsert.addValue("DELIVERY_CHARGES", orderDetails.getOrderInfo().getDeliveryCharges());
 		newOrderInsert.addValue("TOTAL_AMOUNT", orderDetails.getOrderInfo().getTotalAmount());
 		newOrderInsert.addValue("DELIVERY_TIME", orderDetails.getOrderInfo().getDeliveryTime());
+		newOrderInsert.addValue("DELIVERY_SLOT", orderDetails.getOrderInfo().getDeliverySlot());
 		newOrderInsert.addValue("STATUS", "A");
 		newOrderInsert.addValue("CREATION_DATE", new Date());//"2016-01-12 21:50:24");
 		newOrderInsert.addValue("MODIFIED_DATE", new Date());	
@@ -492,46 +493,66 @@ public class UserDAOImpl implements UserDAO{
 						if (rowNum == 1) {
 							/*Getting address data*/
 							Address address = new  Address();
-							address.setAddressId(rs.getInt("ADDRESS_ID"));
-							address.setCity(rs.getString("CITY"));
-							address.setLine1BuildingNo(rs.getString("LINE_1_BUILDING_NO"));
-							address.setLine2StreetNo(rs.getString("LINE_2_STREET_NO"));
-							address.setpCode(rs.getString("PINCODE"));
-							address.setPhone(rs.getString("PHONE"));
-							address.setState(rs.getString("STATE"));
+							try {
+								address.setAddressId(rs.getInt("ADDRESS_ID"));
+								address.setCity(rs.getString("CITY"));
+								address.setLine1BuildingNo(rs.getString("LINE_1_BUILDING_NO"));
+								address.setLine2StreetNo(rs.getString("LINE_2_STREET_NO"));
+								address.setpCode(rs.getString("PINCODE"));
+								address.setPhone(rs.getString("PHONE"));
+								address.setState(rs.getString("STATE"));
+							} catch (Exception e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
 							
 							/*Getting user details*/
 							User user=new User();
-							user.setuName(rs.getString("EMAIL"));
-							user.setuCode(rs.getString("USER_CODE"));
-							user.setUserId(rs.getInt("USER_ID"));
-							user.setAddress(address);
+							try {
+								user.setuName(rs.getString("EMAIL"));
+								user.setuCode(rs.getString("USER_CODE"));
+								user.setUserId(rs.getInt("USER_ID"));
+								user.setAddress(address);
+							} catch (Exception e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
 							
 							 
 							/*Getting Order details*/
 							Order order=new Order();
-							order.setOrderId(rs.getInt("ORDER_ID"));
-							order.setCouponCode(rs.getString("COUPON_CODE"));
-							order.setDeliveryCharges(rs.getDouble("DELIVERY_CHARGES"));
 							try {
-								order.setDeliveryTime(rs.getDate("DELIVERY_TIME"));
+								order.setOrderId(rs.getInt("ORDER_ID"));
+								order.setCouponCode(rs.getString("COUPON_CODE"));
+								order.setDeliveryCharges(rs.getDouble("DELIVERY_CHARGES"));
+								try {
+									order.setDeliveryTime(rs.getDate("DELIVERY_TIME"));
+								} catch (Exception e) {
+									order.setDeliveryTime(null);
+								}
+								order.setTotalAmount(rs.getDouble("TOTAL_AMOUNT"));
+								order.setPaymentMode(rs.getString("PAYMENT_MODE"));
 							} catch (Exception e) {
-								order.setDeliveryTime(null);
+								// TODO Auto-generated catch block
+								e.printStackTrace();
 							}
-							order.setTotalAmount(rs.getDouble("TOTAL_AMOUNT"));
-							order.setPaymentMode(rs.getString("PAYMENT_MODE"));
 							
 						
 							/*Getting Order status*/
 							OrderStatus orderStatus=new OrderStatus();
-							orderStatus.setOrderId(rs.getInt("ORDER_ID"));
-							orderStatus.setOrderStatusCode(rs.getInt("ORDER_STATUS_ID"));
-							orderStatus.setExecutiveName(rs.getString("EXECUTIVE_NAME"));
-							orderStatus.setExecutivePhone(rs.getString("EXECUTIVE_PHONE"));
+							try {
+								orderStatus.setOrderId(rs.getInt("ORDER_ID"));
+								orderStatus.setOrderStatusCode(rs.getInt("ORDER_STATUS_ID"));
+								orderStatus.setExecutiveName(rs.getString("EXECUTIVE_NAME"));
+								orderStatus.setExecutivePhone(rs.getString("EXECUTIVE_PHONE"));
 
-							orderDetails.setOrderInfo(order);
-							orderDetails.setOrderStatus(orderStatus);
-							orderDetails.setUser(user);
+								orderDetails.setOrderInfo(order);
+								orderDetails.setOrderStatus(orderStatus);
+								orderDetails.setUser(user);
+							} catch (Exception e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
 						}
 						
 						Item item = new Item();
@@ -542,7 +563,7 @@ public class UserDAOImpl implements UserDAO{
 						item.setPerItemCost(rs.getFloat("ITEM_PRICE"));	
 						orderDetails.getItemList().add(item);
 				
-				return orderDetails;
+				return orderStatus1;
 			}
 		});
 		return orderDetails;

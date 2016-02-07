@@ -47,7 +47,11 @@ public class AdminFacadeImpl implements AdminFacade{
 				}else if(os[0].equals("4")){
 					templateId=configReader.getValue("sms.outfordelivery");
 					orderDependentParameters.put("F1", os[1]);
-					orderDependentParameters.put("F2", orderDetails.getExecutiveName()+"["+orderDetails.getExecutivePhone()+"]");
+					if(orderDetails.getExecutiveName()==null || orderDetails.getExecutiveName().equals("null")){
+						orderDependentParameters.put("F2", "");
+					}else{
+						orderDependentParameters.put("F2", orderDetails.getExecutiveName());
+					}
 					orderDependentParameters.put("F3", orderDetails.getTotalAmount());
 				}else if(os[0].equals("5")){
 					templateId=configReader.getValue("sms.delivered");

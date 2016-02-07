@@ -51,7 +51,7 @@ public class AdminDAOImpl implements AdminDAO{
 		}
 		requiredOrderStatus=requiredOrderStatus.substring(0,requiredOrderStatus.length()-1);
 		MapSqlParameterSource mapSqlParameterSourceAddress = new MapSqlParameterSource();
-		String orderDetailsQuery ="SELECT OD.USER_ID,OD.ORDER_ID,OD.ADDRESS_ID,OD.TOTAL_AMOUNT,"
+		String orderDetailsQuery ="SELECT OD.USER_ID,OD.ORDER_ID,OD.ADDRESS_ID,OD.TOTAL_AMOUNT,OD.DELIVERY_SLOT,"
 				+	" OD.DELIVERY_CHARGES,OD.PAYMENT_MODE,OD.COUPON_CODE,OD.DELIVERY_TIME,"
 				+ 	" U.FIRST_NAME,U.EMAIL,U.PHONE,U.USER_CODE,U.USER_TYPE,"
 				+	" UA.NAME,UA.PHONE,UA.LINE_1_BUILDING_NO,UA.LINE_2_STREET_NO,UA.CITY,"
@@ -69,20 +69,30 @@ public class AdminDAOImpl implements AdminDAO{
 			
 				/*Getting address data*/
 				Address address = new  Address();
-				address.setAddressId(rs.getInt("ADDRESS_ID"));
-				address.setCity(rs.getString("CITY"));
-				address.setLine1BuildingNo(rs.getString("LINE_1_BUILDING_NO"));
-				address.setLine2StreetNo(rs.getString("LINE_2_STREET_NO"));
-				address.setpCode(rs.getString("PINCODE"));
-				address.setPhone(rs.getString("PHONE"));
-				address.setState(rs.getString("STATE"));
+				try {
+					address.setAddressId(rs.getInt("ADDRESS_ID"));
+					address.setCity(rs.getString("CITY"));
+					address.setLine1BuildingNo(rs.getString("LINE_1_BUILDING_NO"));
+					address.setLine2StreetNo(rs.getString("LINE_2_STREET_NO"));
+					address.setpCode(rs.getString("PINCODE"));
+					address.setPhone(rs.getString("PHONE"));
+					address.setState(rs.getString("STATE"));
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				
 				/*Getting user details*/
 				User user=new User();
-				user.setuName(rs.getString("EMAIL"));
-				user.setuCode(rs.getString("USER_CODE"));
-				user.setUserId(rs.getInt("USER_ID"));
-				user.setAddress(address);
+				try {
+					user.setuName(rs.getString("EMAIL"));
+					user.setuCode(rs.getString("USER_CODE"));
+					user.setUserId(rs.getInt("USER_ID"));
+					user.setAddress(address);
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				
 				 
 				/*Getting Order details*/
@@ -95,20 +105,30 @@ public class AdminDAOImpl implements AdminDAO{
 				} catch (Exception e) {
 					order.setDeliveryTime(null);
 				}
+				try {
+					order.setDeliverySlot(rs.getString("DELIVERY_SLOT"));
+				} catch (Exception e) {
+					order.setDeliverySlot(null);
+				}
 				order.setTotalAmount(rs.getDouble("TOTAL_AMOUNT"));
 				order.setPaymentMode(rs.getString("PAYMENT_MODE"));
 				
 			
 				/*Getting Order status*/
 				OrderStatus orderStatus=new OrderStatus();
-				orderStatus.setOrderId(rs.getInt("ORDER_ID"));
-				orderStatus.setOrderStatusCode(rs.getInt("ORDER_STATUS_ID"));
-				orderStatus.setExecutiveName(rs.getString("EXECUTIVE_NAME"));
-				orderStatus.setExecutivePhone(rs.getString("EXECUTIVE_PHONE"));
+				try {
+					orderStatus.setOrderId(rs.getInt("ORDER_ID"));
+					orderStatus.setOrderStatusCode(rs.getInt("ORDER_STATUS_ID"));
+					orderStatus.setExecutiveName(rs.getString("EXECUTIVE_NAME"));
+					orderStatus.setExecutivePhone(rs.getString("EXECUTIVE_PHONE"));
 
-				orderDetails.setOrderInfo(order);
-				orderDetails.setOrderStatus(orderStatus);
-				orderDetails.setUser(user);
+					orderDetails.setOrderInfo(order);
+					orderDetails.setOrderStatus(orderStatus);
+					orderDetails.setUser(user);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				
 				return orderDetails;
 			}

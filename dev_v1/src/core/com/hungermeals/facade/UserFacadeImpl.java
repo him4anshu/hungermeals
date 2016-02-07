@@ -84,6 +84,21 @@ public class UserFacadeImpl implements UserFacade{
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			
+			/*For Admin*/
+			String templateId1=configReader.getValue("sms.orderplaced4admin");
+			Map<String,String> orderDependentParameters1=new HashMap<String, String>();
+			orderDependentParameters1.put("F1", orderStatus.getOrderId()+"");
+			orderDependentParameters1.put("F2", orderDetails.getOrderInfo().getTotalAmount()+"");
+			orderDependentParameters1.put("F3", "");
+			orderDependentParameters1.put("F4", "-"+phone);
+			try {
+				sms.sendOrderConfermation(new Long("9986122222"), new Long(templateId1), orderDependentParameters1);
+			} catch (NumberFormatException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		
 		return orderStatus;
