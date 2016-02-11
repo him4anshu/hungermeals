@@ -3,6 +3,7 @@ package com.hungermeals.dao;
 import java.util.List;
 
 import com.hungermeals.persist.Address;
+import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.MailingDetails;
 import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.OrderDetails;
@@ -33,5 +34,7 @@ public interface UserDAO {
 	String sendMail(MailingDetails mailingDetails);
 
 	String getotp(String phoneNo,String encryptedOtp) throws Exception;
+
+	CouponTxn applyCouponCode(CouponTxn couponTxn);
 
 }

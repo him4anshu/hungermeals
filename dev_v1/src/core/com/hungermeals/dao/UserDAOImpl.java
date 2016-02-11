@@ -31,6 +31,7 @@ import com.hungermeals.common.TemplateProcessing;
 import com.hungermeals.handler.TemplateDetailsRowMapper;
 import com.hungermeals.handler.UserDetailsRowMapper;
 import com.hungermeals.persist.Address;
+import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.Item;
 import com.hungermeals.persist.MailerBean;
 import com.hungermeals.persist.MailingDetails;
@@ -59,6 +60,7 @@ public class UserDAOImpl implements UserDAO{
 	private SimpleJdbcInsert insertIntoAddressTable;
 	private SimpleJdbcInsert insertIntoOrderTable;
 	private SimpleJdbcInsert insertIntoOrderItemTable;
+	private SimpleJdbcInsert insertIntoUserCouponMapping;
 
 
 
@@ -82,6 +84,10 @@ public class UserDAOImpl implements UserDAO{
 		insertIntoOrderItemTable=new SimpleJdbcInsert(ds)
 		.withTableName("order_item_details")									  
 		.usingGeneratedKeyColumns("oidid");
+		
+		insertIntoUserCouponMapping=new SimpleJdbcInsert(ds)
+		.withTableName("user_coupon_mapping")									  
+		.usingGeneratedKeyColumns("id");
 	}
 
 	@Override
@@ -328,6 +334,13 @@ public class UserDAOImpl implements UserDAO{
 
 		try{
 			orderId=insertIntoOrderTable.executeAndReturnKey(newOrderInsert).intValue();
+			if(orderDetails.getOrderInfo().getCouponCode()!=null){
+				int x=addCouponForUser(orderDetails.getOrderInfo().getCouponCode(),userId);
+				if(x!=1){
+					orderStatus.setOrderStatusDesc("Coupon Couldn't applied successfully");
+					return orderStatus;
+				}
+			}
 			orderStatus.setOrderStatusDesc("Order placed");
 			orderStatus.setOrderStatusCode(1);
 			}catch (Exception e) {
@@ -421,6 +434,22 @@ public class UserDAOImpl implements UserDAO{
 		mapSqlParameterSource.addValue("USER_CODE", user.getuCode());
 		int userId=0;
 		String userIdQuery = "SELECT USER_ID FROM user WHERE EMAIL=:EMAIL AND USER_CODE=:USER_CODE AND STATUS='A' ";
+		try {
+			userId= namedParameterJdbcTemplate.queryForInt(userIdQuery,mapSqlParameterSource);
+		}catch(Exception e){
+			response.setResponseCode("HM103");
+			response.setResponseMessage(configReader.getValue("HM103"));
+			response.setErrorDetails(e.getMessage());
+		}
+		return userId;
+	}
+	
+	private int getUserIdByUserCode(String userCode){
+		ResponseStatus response=new ResponseStatus();
+		MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
+		mapSqlParameterSource.addValue("USER_CODE", userCode);
+		int userId=0;
+		String userIdQuery = "SELECT USER_ID FROM user WHERE  USER_CODE=:USER_CODE AND STATUS='A' ";
 		try {
 			userId= namedParameterJdbcTemplate.queryForInt(userIdQuery,mapSqlParameterSource);
 		}catch(Exception e){
@@ -846,6 +875,109 @@ public class UserDAOImpl implements UserDAO{
 		else
 			return otp+"";
 	}
+
+	@Override
+	public CouponTxn applyCouponCode(CouponTxn couponTxn) {
+		ResponseStatus responseStatus=new ResponseStatus();
+		final CouponTxn cpt = getCouponDetails(couponTxn.getCouponCode());
+		MapSqlParameterSource map = new MapSqlParameterSource();
+		map.addValue("COUPON_ID", cpt.getCouponCode());
+		if(("Valid").equals(cpt.getCouponAppliedStatus())){
+			int userId=getUserIdByUserCode(couponTxn.getuCode());
+			map.addValue("USER_ID", userId);
+			String couponDetailsQuery ="SELECT * FROM user_coupon_mapping UCM JOIN coupon_details CD ON UCM.COUPON_ID=CD.ID WHERE UCM.COUPON_ID=:COUPON_ID AND UCM.USER_ID=:USER_ID AND UCM.STATUS='A'";
+			System.out.println("User and Coupon validation check query "+couponDetailsQuery);
+
+			List<CouponTxn> cp=new ArrayList<CouponTxn>();
+			try {
+				cp = namedParameterJdbcTemplate.query(couponDetailsQuery,map, new RowMapper(){
+				@Override
+				public Object mapRow(ResultSet rs, int arg1)
+						throws SQLException {
+					CouponTxn cptx=new CouponTxn();
+					cptx.setCouponAppliedStatus("Valid Coupon");
+					cptx.setCouponValue(rs.getString("coupon_value"));
+					cptx.setCouponValueType(rs.getString("coupon_value_type"));
+					cptx.setResue_attempt(rs.getInt("reuse_attempt"));
+					cptx.setResue_attempt(rs.getInt("use_attempt"));
+					cptx.setCouponId(rs.getInt("id")+"");
+					return cptx;
+				}
+			 });
+			/*since one user will have one coupon only ,so getting zeroth index value*/	
+			if(cp.size()==0){
+				cpt.setCouponAppliedStatus("Verified");
+				responseStatus.setResponseCode("HM105");
+				responseStatus.setResponseMessage(configReader.getValue("HM105"));
+			}else if(cp.size()>0 && (cp.get(0).getResue_attempt() > cp.get(0).getUse_attempt())){
+				cpt.setCouponAppliedStatus("Verified");
+				responseStatus.setResponseCode("HM105");
+				responseStatus.setResponseMessage(configReader.getValue("HM105"));
+			}else if(cp.size()>0 && (cp.get(0).getResue_attempt()==cp.get(0).getUse_attempt())){
+				cpt.setCouponAppliedStatus("Already Used");
+				responseStatus.setResponseCode("HM106");
+				responseStatus.setResponseMessage(configReader.getValue("HM106"));
+			}else{
+				cpt.setCouponAppliedStatus("Not Authorize to use");
+			}
+				
+			} catch (DataAccessException e) {
+				cpt.setCouponAppliedStatus("Database Exception");
+				responseStatus.setResponseCode("HM103");
+				responseStatus.setResponseMessage(configReader.getValue("HM103"));
+				responseStatus.setErrorDetails(e.getMessage());
+				e.printStackTrace();
+			}	
+
+		}else{
+			cpt.setCouponAppliedStatus("Invalid");
+			responseStatus.setResponseCode("HM104");
+			responseStatus.setResponseMessage(configReader.getValue("HM104"));
+		}
+		cpt.setResponseStatus(responseStatus);
+		return cpt;
+	}
 	
+	private CouponTxn getCouponDetails(String couponCodes){
+		MapSqlParameterSource map = new MapSqlParameterSource();
+		map.addValue("COUPON_CODE", couponCodes);
+		String couponDetailsQuery ="SELECT * FROM coupon_details WHERE COUPON_CODE=:COUPON_CODE AND STATUS='A'";
+		System.out.println("Coupon validation check query "+couponDetailsQuery);
+		CouponTxn cp=new CouponTxn();
+		try {
+			cp = (CouponTxn) namedParameterJdbcTemplate.queryForObject(couponDetailsQuery,map, new RowMapper(){
+			@Override
+			public Object mapRow(ResultSet rs, int arg1)
+					throws SQLException {
+				CouponTxn cptx=new CouponTxn();
+				cptx.setCouponAppliedStatus("Valid");
+				cptx.setCouponValue(rs.getString("coupon_value"));
+				cptx.setCouponValueType(rs.getString("coupon_value_type"));
+				cptx.setResue_attempt(rs.getInt("reuse_attempt"));
+				cptx.setCouponId(rs.getInt("id")+"");
+				return cptx;
+			}
+		 });
+		} catch (DataAccessException e) {
+			cp.setCouponAppliedStatus("Invalid");
+			e.printStackTrace();
+		}	
+		return cp;
+	}
 	
+	private int addCouponForUser(String couponCode,int userId){
+		MapSqlParameterSource newCouponInsert=new MapSqlParameterSource();
+		int insertedRecord=0;
+		CouponTxn cptx=getCouponDetails(couponCode);
+		newCouponInsert.addValue("USER_ID", userId);
+		newCouponInsert.addValue("COUPON_ID", cptx.getCouponId());
+		newCouponInsert.addValue("USE_ATTEMPT", cptx.getUse_attempt()+1);
+		newCouponInsert.addValue("STATUS", "A");
+		try{
+			insertedRecord=insertIntoUserCouponMapping.executeAndReturnKey(newCouponInsert).intValue();			
+		}catch (Exception e) {
+		e.printStackTrace();
+	}
+		return insertedRecord;
+}
 }

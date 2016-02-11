@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.hungermeals.facade.UserFacade;
 import com.hungermeals.persist.Address;
+import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.MailingDetails;
 import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.OrderDetails;
@@ -81,6 +82,11 @@ public class UserAPIImpl implements UserAPI{
 	@Override
 	public ResponseStatus getotp(String phoneNo) {
 		return userFacade.getotp(phoneNo);
+	}
+
+	@Override
+	public CouponTxn applyCouponCode(CouponTxn couponTxn) {
+		return userFacade.applyCouponCode(couponTxn);
 	}
 
 

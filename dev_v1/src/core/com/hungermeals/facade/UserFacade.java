@@ -3,6 +3,7 @@ package com.hungermeals.facade;
 import java.util.List;
 
 import com.hungermeals.persist.Address;
+import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.MailingDetails;
 import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.OrderDetails;
@@ -34,5 +35,7 @@ public interface UserFacade {
 	String sendMail(MailingDetails mailingDetails);
 
 	ResponseStatus getotp(String phoneNo);
+
+	CouponTxn applyCouponCode(CouponTxn couponTxn);
 
 }

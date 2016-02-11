@@ -13,6 +13,7 @@ import com.hungermeals.common.SMSThirdPartyService;
 import com.hungermeals.common.StringEncrypterService;
 import com.hungermeals.dao.UserDAO;
 import com.hungermeals.persist.Address;
+import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.MailingDetails;
 import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.OrderDetails;
@@ -161,6 +162,10 @@ public class UserFacadeImpl implements UserFacade{
 			} 
 		}
 		return response;
+	}
+	@Override
+	public CouponTxn applyCouponCode(CouponTxn couponTxn) {
+		return userDAO.applyCouponCode(couponTxn);
 	}
 	
 		

@@ -15,6 +15,7 @@ import com.hungermeals.api.UserAPI;
 import com.hungermeals.common.SMSThirdPartyService;
 import com.hungermeals.dao.UserDAO;
 import com.hungermeals.persist.Address;
+import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.MailingDetails;
 import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.OrderDetails;
@@ -128,5 +129,12 @@ public class UserController {
     @Produces("application/json")
 	public ResponseStatus getotp(@PathParam("phoneNo") String phoneNo){
 		return userAPI.getotp(phoneNo);
+	}
+	
+	@POST
+	@Path("/applyCouponCode.json")
+    @Produces("application/json")
+	public CouponTxn applyCouponCode(CouponTxn couponTxn){
+		return userAPI.applyCouponCode(couponTxn);
 	}
 }
