@@ -3,6 +3,7 @@ package com.hungermeals.controller;
 import java.util.List;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.hungermeals.api.AdminAPI;
 import com.hungermeals.persist.Item;
 import com.hungermeals.persist.OrderDetails;
+import com.hungermeals.persist.PlanSubscription;
 import com.hungermeals.persist.User;
 
 
@@ -58,4 +60,10 @@ public class AdminController {
 		return adminAPI.itemListByOrder(orderId);
 	}
 	
+	@POST
+	@Path("/comboDetailsByAdmin.json")
+    @Produces("application/json")
+	public List<PlanSubscription> comboDetails(User user){
+		return adminAPI.comboDetailsByUser(user);
+	}
 }

@@ -6,11 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.hungermeals.facade.UserFacade;
 import com.hungermeals.persist.Address;
+import com.hungermeals.persist.ComboDetails;
 import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.MailingDetails;
 import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.OrderDetails;
 import com.hungermeals.persist.OrderStatus;
+import com.hungermeals.persist.PlanSubscription;
 import com.hungermeals.persist.ResponseStatus;
 import com.hungermeals.persist.User;
 import com.hungermeals.persist.User1;
@@ -87,6 +89,58 @@ public class UserAPIImpl implements UserAPI{
 	@Override
 	public CouponTxn applyCouponCode(CouponTxn couponTxn) {
 		return userFacade.applyCouponCode(couponTxn);
+	}
+
+	@Override
+	public PlanSubscription planSubscription(PlanSubscription planSubscription) {
+		return userFacade.planSubscription(planSubscription);
+	}
+
+	@Override
+	public PlanSubscription updatePlanSubscription(PlanSubscription planSubscription) {
+			return userFacade.updatePlanSubscription(planSubscription);
+	}
+
+	@Override
+	public PlanSubscription cancelPlanSubscription(PlanSubscription planSubscription) {
+		return userFacade.cancelPlanSubscription(planSubscription);
+
+	}
+
+	@Override
+	public List<ComboDetails> getComboDetails() {
+		return userFacade.getComboDetails();
+
+	}
+
+	@Override
+	public User changePassword(User user) {
+		return userFacade.changePassword(user);
+
+	}
+
+	@Override
+	public List<PlanSubscription> comboDetailsByUser(User user) {
+		return userFacade.comboDetailsByUser(user);
+
+	}
+
+	@Override
+	public User mobileVerification(User user) {
+		return userFacade.mobileVerification(user);
+
+	}
+
+	@Override
+	public User emailVerification(User user) {
+		return userFacade.emailVerification(user);
+
+	}
+
+	@Override
+	public User updateMobileVerificationStatus(User user) {
+		return userFacade.updateMobileVerificationStatus(user);
+
 	}
 
 

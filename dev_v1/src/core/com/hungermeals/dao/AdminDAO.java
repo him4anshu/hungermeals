@@ -5,6 +5,7 @@ import java.util.List;
 import com.hungermeals.persist.Item;
 import com.hungermeals.persist.OrderDetails;
 import com.hungermeals.persist.OrderStatus;
+import com.hungermeals.persist.PlanSubscription;
 import com.hungermeals.persist.User;
 
 public interface AdminDAO {
@@ -16,5 +17,7 @@ public interface AdminDAO {
 	List<Item> itemListByOrder(String orderId);
 
 	OrderStatus getUserByOrderId(String orderId);
+
+	List<PlanSubscription> comboDetailsByUser(User user);
 
 }

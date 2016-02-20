@@ -27,6 +27,9 @@ public class User {
 	
 	private String userType;
 	private ResponseStatus responseStatus;
+	private String mobileVerificationCode;
+	private boolean mobileVerified;
+	private boolean emailVerified;
 	public long getUserId() {
 		return userId;
 	}
@@ -161,6 +164,30 @@ public class User {
 
 	public void setResponseStatus(ResponseStatus responseStatus) {
 		this.responseStatus = responseStatus;
+	}
+
+	public String getMobileVerificationCode() {
+		return mobileVerificationCode;
+	}
+
+	public void setMobileVerificationCode(String mobileVerificationCode) {
+		this.mobileVerificationCode = mobileVerificationCode;
+	}
+
+	public boolean isMobileVerified() {
+		return mobileVerified;
+	}
+
+	public void setMobileVerified(boolean mobileVerified) {
+		this.mobileVerified = mobileVerified;
+	}
+
+	public boolean isEmailVerified() {
+		return emailVerified;
+	}
+
+	public void setEmailVerified(boolean emailVerified) {
+		this.emailVerified = emailVerified;
 	}	
 	
 	

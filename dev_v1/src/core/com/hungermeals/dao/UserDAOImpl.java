@@ -27,10 +27,12 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.mail.javamail.MimeMessagePreparator;
 
 import com.hungermeals.common.ConfigReader;
+import com.hungermeals.common.StringEncrypterService;
 import com.hungermeals.common.TemplateProcessing;
 import com.hungermeals.handler.TemplateDetailsRowMapper;
 import com.hungermeals.handler.UserDetailsRowMapper;
 import com.hungermeals.persist.Address;
+import com.hungermeals.persist.ComboDetails;
 import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.Item;
 import com.hungermeals.persist.MailerBean;
@@ -39,6 +41,7 @@ import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.Order;
 import com.hungermeals.persist.OrderDetails;
 import com.hungermeals.persist.OrderStatus;
+import com.hungermeals.persist.PlanSubscription;
 import com.hungermeals.persist.ResponseStatus;
 import com.hungermeals.persist.TemplateBean;
 import com.hungermeals.persist.User;
@@ -61,6 +64,7 @@ public class UserDAOImpl implements UserDAO{
 	private SimpleJdbcInsert insertIntoOrderTable;
 	private SimpleJdbcInsert insertIntoOrderItemTable;
 	private SimpleJdbcInsert insertIntoUserCouponMapping;
+	private SimpleJdbcInsert insertPlanSubscription;
 
 
 
@@ -88,6 +92,11 @@ public class UserDAOImpl implements UserDAO{
 		insertIntoUserCouponMapping=new SimpleJdbcInsert(ds)
 		.withTableName("user_coupon_mapping")									  
 		.usingGeneratedKeyColumns("id");
+		
+		insertPlanSubscription=new SimpleJdbcInsert(ds)
+		.withTableName("plan_subscription")									  
+		.usingGeneratedKeyColumns("id");
+		
 	}
 
 	@Override
@@ -217,6 +226,7 @@ public class UserDAOImpl implements UserDAO{
 					user.setuCode(rs.getString("USER_CODE"));
 					user.setuName(rs.getString("EMAIL"));
 					user.setMobile(rs.getString("PHONE"));
+					user.setMobileVerified(rs.getBoolean("MOBILE_VERIFICATION"));
 					return user;
 				}
 			});
@@ -334,18 +344,28 @@ public class UserDAOImpl implements UserDAO{
 
 		try{
 			orderId=insertIntoOrderTable.executeAndReturnKey(newOrderInsert).intValue();
-			if(orderDetails.getOrderInfo().getCouponCode()!=null){
+			if(orderDetails.getOrderInfo().getCouponCode()!=null && !("".equals(orderDetails.getOrderInfo().getCouponCode()))){
 				int x=addCouponForUser(orderDetails.getOrderInfo().getCouponCode(),userId);
-				if(x!=1){
+				if(x==0){
 					orderStatus.setOrderStatusDesc("Coupon Couldn't applied successfully");
+					response.setResponseCode("HM104");
+					response.setResponseMessage(configReader.getValue("HM104"));
+					orderStatus.setResponseStatus(response);
 					return orderStatus;
 				}
 			}
+			response.setResponseCode("HM200");
+			response.setResponseMessage(configReader.getValue("HM200"));
+			orderStatus.setResponseStatus(response);
 			orderStatus.setOrderStatusDesc("Order placed");
 			orderStatus.setOrderStatusCode(1);
 			}catch (Exception e) {
 				orderStatus.setOrderStatusDesc("Order couldn't able to place ");
 				orderStatus.setOrderStatusCode(0);
+				response.setResponseCode("HM103");
+				response.setResponseMessage(configReader.getValue("HM103"));
+				response.setResponseMessage(e.getMessage());
+				orderStatus.setResponseStatus(response);
 				e.printStackTrace();
 			}			
 		List<Item> itemList=orderDetails.getItemList();
@@ -364,13 +384,14 @@ public class UserDAOImpl implements UserDAO{
 				response.setResponseCode("HM103");
 				response.setResponseMessage(configReader.getValue("HM103"));
 				response.setErrorDetails(e.getMessage());
+				orderStatus.setResponseStatus(response);
 				
 			}
 
 		}	
 		orderStatus.setOrderId(orderId);
-		orderStatus.setExecutiveName("MK Jcob");
-		orderStatus.setExecutivePhone("7829777997");
+		//orderStatus.setExecutiveName("MK Jcob");
+		//orderStatus.setExecutivePhone("7829777997");
 		return orderStatus;
 	}
 
@@ -509,6 +530,7 @@ public class UserDAOImpl implements UserDAO{
 				+	" WHERE OD.ORDER_ID=:ORDER_ID AND OD.USER_ID=:USER_ID ";
 
 		System.out.println(orderDetailsQuery);
+		System.out.println("OrderId="+orderDetail.getOrderInfo().getOrderId() +"####### UserId="+userId);
 		//OrderDetails orderDetails = new OrderDetails();
 		final OrderDetails orderDetails=new OrderDetails();
 		orderDetails.setItemList(new ArrayList<Item>());
@@ -519,7 +541,8 @@ public class UserDAOImpl implements UserDAO{
 				
 				//User user =new User();
 				OrderStatus orderStatus1 =new OrderStatus();
-						if (rowNum == 1) {
+				System.out.println("Getting details For row number "+rowNum);
+						if (rowNum == 0) {
 							/*Getting address data*/
 							Address address = new  Address();
 							try {
@@ -881,9 +904,10 @@ public class UserDAOImpl implements UserDAO{
 		ResponseStatus responseStatus=new ResponseStatus();
 		final CouponTxn cpt = getCouponDetails(couponTxn.getCouponCode());
 		MapSqlParameterSource map = new MapSqlParameterSource();
-		map.addValue("COUPON_ID", cpt.getCouponCode());
+		map.addValue("COUPON_ID", cpt.getCouponId());
 		if(("Valid").equals(cpt.getCouponAppliedStatus())){
 			int userId=getUserIdByUserCode(couponTxn.getuCode());
+			System.out.println(cpt.getCouponCode()+"####"+userId+"###"+couponTxn.getuCode());
 			map.addValue("USER_ID", userId);
 			String couponDetailsQuery ="SELECT * FROM user_coupon_mapping UCM JOIN coupon_details CD ON UCM.COUPON_ID=CD.ID WHERE UCM.COUPON_ID=:COUPON_ID AND UCM.USER_ID=:USER_ID AND UCM.STATUS='A'";
 			System.out.println("User and Coupon validation check query "+couponDetailsQuery);
@@ -899,7 +923,7 @@ public class UserDAOImpl implements UserDAO{
 					cptx.setCouponValue(rs.getString("coupon_value"));
 					cptx.setCouponValueType(rs.getString("coupon_value_type"));
 					cptx.setResue_attempt(rs.getInt("reuse_attempt"));
-					cptx.setResue_attempt(rs.getInt("use_attempt"));
+					cptx.setUse_attempt(rs.getInt("use_attempt"));
 					cptx.setCouponId(rs.getInt("id")+"");
 					return cptx;
 				}
@@ -911,10 +935,12 @@ public class UserDAOImpl implements UserDAO{
 				responseStatus.setResponseMessage(configReader.getValue("HM105"));
 			}else if(cp.size()>0 && (cp.get(0).getResue_attempt() > cp.get(0).getUse_attempt())){
 				cpt.setCouponAppliedStatus("Verified");
+				cpt.setUse_attempt(cp.get(0).getUse_attempt());
 				responseStatus.setResponseCode("HM105");
 				responseStatus.setResponseMessage(configReader.getValue("HM105"));
 			}else if(cp.size()>0 && (cp.get(0).getResue_attempt()==cp.get(0).getUse_attempt())){
 				cpt.setCouponAppliedStatus("Already Used");
+				cpt.setUse_attempt(cp.get(0).getUse_attempt());
 				responseStatus.setResponseCode("HM106");
 				responseStatus.setResponseMessage(configReader.getValue("HM106"));
 			}else{
@@ -980,4 +1006,272 @@ public class UserDAOImpl implements UserDAO{
 	}
 		return insertedRecord;
 }
+
+	@Override
+	public PlanSubscription planSubscription(PlanSubscription planSubscription) {
+		
+		ResponseStatus res=new ResponseStatus();
+		int userId=getUserIdByUserCode(planSubscription.getuCode());
+		if(userId!=0){
+		MapSqlParameterSource newInsertPlanSubscription=new MapSqlParameterSource();
+		newInsertPlanSubscription.addValue("USER_ID", userId);
+		newInsertPlanSubscription.addValue("PLAN_TYPE", planSubscription.getPlanType());
+		newInsertPlanSubscription.addValue("SELECTED_DATE", planSubscription.getSelectedDate());
+		newInsertPlanSubscription.addValue("START_DATE", planSubscription.getStartDate());
+		newInsertPlanSubscription.addValue("END_DATE", planSubscription.getEndDate());
+		newInsertPlanSubscription.addValue("PLAN_STATUS", "Active");
+		newInsertPlanSubscription.addValue("PLAN_COST", planSubscription.getPlanCost());
+		newInsertPlanSubscription.addValue("ADDRESS_ID", planSubscription.getAddressId());
+		newInsertPlanSubscription.addValue("COMBO_ID", planSubscription.getComboId());
+		newInsertPlanSubscription.addValue("PAYMENT_MODE", planSubscription.getPaymentMode());
+		newInsertPlanSubscription.addValue("TIME_SLOT", planSubscription.getTimeSlot());
+		newInsertPlanSubscription.addValue("STATUS", "A");
+		
+		try{
+			int insertedRecord=insertPlanSubscription.executeAndReturnKey(newInsertPlanSubscription).intValue();
+			res.setResponseCode("HM200");
+			res.setResponseMessage(configReader.getValue("HM200"));
+			planSubscription.setPlanSubscribeId(insertedRecord);
+		}catch (Exception e) {
+			e.printStackTrace();
+			res.setResponseCode("HM103");
+			res.setResponseMessage(configReader.getValue("HM103"));
+			res.setErrorDetails(e.getMessage());
+		}
+		}
+		planSubscription.setResponseStatus(res);
+		return planSubscription;
+	}
+
+	@Override
+	public PlanSubscription updatePlanSubscription(
+			PlanSubscription planSubscription) {
+		ResponseStatus res=new ResponseStatus();
+		int userId=getUserIdByUserCode(planSubscription.getuCode());
+		String updatePlanDate="UPDATE plan_subscription SET SELECTED_DATE='"+planSubscription.getSelectedDate()+"' ,START_DATE='"+planSubscription.getStartDate()+"',END_DATE='"+planSubscription.getEndDate()+"' WHERE USER_ID='"+userId+"' AND ID="+planSubscription.getPlanSubscribeId();
+		try {
+			int updateResult=namedParameterJdbcTemplate.update(updatePlanDate, new MapSqlParameterSource());	
+			if(updateResult!=0){
+				planSubscription.setUpdatedStatus(true);
+				res.setResponseCode("HM200");
+				res.setResponseMessage(configReader.getValue("HM200"));
+			}else{
+				planSubscription.setUpdatedStatus(false);
+				res.setResponseCode("HM200");
+				res.setResponseMessage(configReader.getValue("HM200"));
+			}
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+			planSubscription.setUpdatedStatus(false);
+			res.setResponseCode("HM203");
+			res.setResponseMessage(configReader.getValue("HM203"));
+			res.setErrorDetails(e.getMessage());
+		}
+		planSubscription.setResponseStatus(res);
+		return  planSubscription;
+
+	}
+
+	@Override
+	public PlanSubscription cancelPlanSubscription(
+			PlanSubscription planSubscription) {
+		ResponseStatus res=new ResponseStatus();
+		int userId=getUserIdByUserCode(planSubscription.getuCode());
+		String updatePlanDate="UPDATE plan_subscription SET PLAN_STATUS='cancelled' WHERE USER_ID='"+userId+"' AND ID="+planSubscription.getPlanSubscribeId();
+		try {
+			int updateResult=namedParameterJdbcTemplate.update(updatePlanDate, new MapSqlParameterSource());
+			if(updateResult!=0){
+				planSubscription.setUpdatedStatus(true);
+				planSubscription.setPlanStatus("cancelled");
+				res.setResponseCode("HM200");
+				res.setResponseMessage(configReader.getValue("HM200"));
+			}else{
+				planSubscription.setUpdatedStatus(false);
+				res.setResponseCode("HM203");
+				res.setResponseMessage(configReader.getValue("HM203"));
+			}
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+			planSubscription.setUpdatedStatus(false);
+			res.setResponseCode("HM103");
+			res.setResponseMessage(configReader.getValue("HM103"));
+			res.setErrorDetails(e.getMessage());
+		}
+		planSubscription.setResponseStatus(res);
+		return  planSubscription;
+
+	}
+
+	@Override
+	public List<ComboDetails> getComboDetails() {
+		String couponDetailsQuery ="SELECT * FROM combo_details";
+		List<ComboDetails> cp=new ArrayList<ComboDetails>();
+		try {
+			cp =  namedParameterJdbcTemplate.query(couponDetailsQuery,new MapSqlParameterSource(), new RowMapper(){
+			@Override
+			public Object mapRow(ResultSet rs, int arg1)
+					throws SQLException {
+				ComboDetails cptx=new ComboDetails();
+				cptx.setComboId(rs.getInt("combo_id"));
+				cptx.setComboName(rs.getString("combo_name"));
+				cptx.setCost(rs.getInt("combo_price"));
+				return cptx;
+			}
+		 });
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+		}	
+		return cp;
+	
+	}
+
+	@Override
+	public User changePassword(User user) {
+			ResponseStatus response=new ResponseStatus();
+			user.setResponseStatus(response);
+			MapSqlParameterSource updatePassword=new MapSqlParameterSource();
+			updatePassword.addValue("ENC_PASSWORD", user.getPassword1());
+			updatePassword.addValue("USER_CODE", user.getuCode());	
+			String updatePasswordQuery="UPDATE user SET ENC_PASSWORD=:ENC_PASSWORD WHERE USER_CODE=:USER_CODE";
+			int updateResult=0;
+			try {
+				updateResult = namedParameterJdbcTemplate.update(updatePasswordQuery, updatePassword);
+				if(updateResult!=0){
+					response.setResponseCode("HM200");
+					response.setResponseMessage(configReader.getValue("HM200"));
+				}else{
+					response.setResponseCode("HM203");
+					response.setResponseMessage(configReader.getValue("HM203"));
+				}
+			} catch (DataAccessException e1) {
+				e1.printStackTrace();
+				response.setResponseCode("HM203");
+				response.setResponseMessage(configReader.getValue("HM203"));
+			}
+			return user;
+	}
+
+	@Override
+	public List<PlanSubscription> comboDetailsByUser(User user) {
+		int userId=getUserIdByUserCode(user);
+		List<PlanSubscription> planSubscription=new ArrayList<PlanSubscription>();
+		MapSqlParameterSource mapSqlParameterSourceAddress = new MapSqlParameterSource();
+		mapSqlParameterSourceAddress.addValue("USER_ID", userId);
+		String orderStatusQuery="SELECT PHONE,LINE_1_BUILDING_NO,LINE_2_STREET_NO,CITY,PINCODE,ADDRESS_ID,"
+				+ "COMBO_ID,END_DATE,PAYMENT_MODE,PLAN_COST,PLAN_TYPE,SELECTED_DATE,ID,"
+				+ "START_DATE,TIME_SLOT from plan_subscription PS JOIN user_address UA ON PS.ADDRESS_ID=UA.USER_ADDRESS_ID WHERE PS.USER_ID=:USER_ID";
+		System.out.println("comboDetailsByUser Query \n"+orderStatusQuery);
+		
+		planSubscription=namedParameterJdbcTemplate.query(orderStatusQuery,mapSqlParameterSourceAddress, new RowMapper() {
+			@Override
+			public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
+				PlanSubscription planSubscription =new PlanSubscription();
+				planSubscription.setAddressId(rs.getInt("ADDRESS_ID"));
+				planSubscription.setComboId(rs.getInt("COMBO_ID")+"");
+				planSubscription.setEndDate(rs.getString("END_DATE"));
+				planSubscription.setPaymentMode(rs.getString("PAYMENT_MODE"));
+				planSubscription.setPlanCost(rs.getInt("PLAN_COST"));
+				planSubscription.setPlanSubscribeId(rs.getInt("ID"));
+				planSubscription.setPlanType(rs.getString("PLAN_TYPE"));
+				planSubscription.setSelectedDate(rs.getString("SELECTED_DATE"));
+				planSubscription.setStartDate(rs.getString("START_DATE"));
+				planSubscription.setTimeSlot(rs.getString("TIME_SLOT"));
+				Address address = new  Address();
+				try {
+					address.setAddressId(rs.getInt("ADDRESS_ID"));
+					address.setCity(rs.getString("CITY"));
+					address.setLine1BuildingNo(rs.getString("LINE_1_BUILDING_NO"));
+					address.setLine2StreetNo(rs.getString("LINE_2_STREET_NO"));
+					address.setpCode(rs.getString("PINCODE"));
+					address.setPhone(rs.getString("PHONE"));
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				planSubscription.setAddress(address);
+				ResponseStatus response=new ResponseStatus();
+				response.setResponseCode("HM200");
+				response.setResponseMessage(configReader.getValue("HM200"));
+				planSubscription.setResponseStatus(response);
+				return planSubscription;
+			}
+		});
+		if(planSubscription.size()==0){
+			ResponseStatus response=new ResponseStatus();
+			response.setResponseCode("HM204");
+			response.setResponseMessage(configReader.getValue("HM204"));
+			PlanSubscription pp=new PlanSubscription();
+			pp.setResponseStatus(response);
+			planSubscription.add(pp);
+		}
+		return planSubscription;
+	
+	}
+
+	@Override
+	public User mobileVerification(User user) {
+		ResponseStatus response=new ResponseStatus();
+		user.setResponseStatus(response);
+		MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
+		mapSqlParameterSource.addValue("USER_CODE", user.getuCode());
+		mapSqlParameterSource.addValue("PHONE", user.getMobile());
+		String userIdQuery = "SELECT count(*) FROM user WHERE USER_CODE=:USER_CODE AND PHONE=:PHONE AND STATUS='A'";
+		try {
+			int rowCount=namedParameterJdbcTemplate.queryForInt(userIdQuery,mapSqlParameterSource);
+			if(rowCount==1){
+				response.setResponseCode("HM200");
+				response.setResponseMessage(configReader.getValue("HM200"));
+			}else if(rowCount>1){
+				response.setResponseCode("HM205");
+				response.setResponseMessage(configReader.getValue("HM205"));
+			}else{
+				response.setResponseCode("HM204");
+				response.setResponseMessage(configReader.getValue("HM204"));
+			}
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+			response.setResponseCode("HM103");
+			response.setResponseMessage(configReader.getValue("HM103"));
+			response.setErrorDetails(e.getMessage());
+		}
+		return user;
+	
+	
+	}
+
+	@Override
+	public User emailVerification(User user) {
+		return null;
+	}
+
+	@Override
+	public String getMobileVerificationCode(User user) {
+		String ucode=UUID.randomUUID().toString();
+		String otp=ucode.substring(0,6).toUpperCase();
+		//String encryptedOtp= StringEncrypterService.encryptString(otp.toUpperCase());
+		String updateOtp="UPDATE user SET MOBILE_VERIFICATION_CODE='"+otp+"' WHERE USER_CODE='"+user.getuCode()+"'";
+		int updateResult=namedParameterJdbcTemplate.update(updateOtp, new MapSqlParameterSource());
+		if(updateResult==0)
+			return "FAIL";
+		else
+			return otp+"";
+	}
+
+	@Override
+	public User updateMobileVerificationStatus(User user) {
+		ResponseStatus response=new ResponseStatus();
+		String updateOtp="UPDATE user SET MOBILE_VERIFICATION="+true+" WHERE USER_CODE='"+user.getuCode()+"' AND MOBILE_VERIFICATION_CODE='"+user.getMobileVerificationCode()+"'";
+		int updateResult=namedParameterJdbcTemplate.update(updateOtp, new MapSqlParameterSource());
+		if(updateResult==1){
+			response.setResponseCode("HM200");
+			response.setResponseMessage(configReader.getValue("HM200"));
+			user.setMobileVerified(true);
+			user.setUserStatus(true);
+		}else{
+			response.setResponseCode("HM203");
+			response.setResponseMessage(configReader.getValue("HM203"));
+		}
+		user.setResponseStatus(response);
+		return user;
+	}
 }

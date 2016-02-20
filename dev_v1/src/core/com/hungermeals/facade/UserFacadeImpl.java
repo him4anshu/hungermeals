@@ -13,11 +13,13 @@ import com.hungermeals.common.SMSThirdPartyService;
 import com.hungermeals.common.StringEncrypterService;
 import com.hungermeals.dao.UserDAO;
 import com.hungermeals.persist.Address;
+import com.hungermeals.persist.ComboDetails;
 import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.MailingDetails;
 import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.OrderDetails;
 import com.hungermeals.persist.OrderStatus;
+import com.hungermeals.persist.PlanSubscription;
 import com.hungermeals.persist.ResponseStatus;
 import com.hungermeals.persist.User;
 import com.hungermeals.persist.User1;
@@ -93,8 +95,9 @@ public class UserFacadeImpl implements UserFacade{
 			orderDependentParameters1.put("F2", orderDetails.getOrderInfo().getTotalAmount()+"");
 			orderDependentParameters1.put("F3", "");
 			orderDependentParameters1.put("F4", "-"+phone);
+			String adminPhone=configReader.getValue("admin.phone");
 			try {
-				sms.sendOrderConfermation(new Long("9986122222"), new Long(templateId1), orderDependentParameters1);
+				sms.sendOrderConfermation(new Long(adminPhone), new Long(templateId1), orderDependentParameters1);
 			} catch (NumberFormatException e) {
 				e.printStackTrace();
 			} catch (Exception e) {
@@ -166,6 +169,134 @@ public class UserFacadeImpl implements UserFacade{
 	@Override
 	public CouponTxn applyCouponCode(CouponTxn couponTxn) {
 		return userDAO.applyCouponCode(couponTxn);
+	}
+	@Override
+	public PlanSubscription planSubscription(PlanSubscription planSubscription) {
+		PlanSubscription p= userDAO.planSubscription(planSubscription);
+		if(p.getPlanSubscribeId()!=0){
+			String templateId=configReader.getValue("sms.subscribeplan");
+			SMSThirdPartyService sms=new SMSThirdPartyService();
+			String phone=planSubscription.getMobile();
+			Map<String,String> orderDependentParameters=new HashMap<String, String>();
+			orderDependentParameters.put("F1", "");
+			orderDependentParameters.put("F2", "");
+			//orderDependentParameters.put("F3", orderStatus.getExecutiveName()+" (+91 "+orderStatus.getExecutivePhone()+" )");	
+			orderDependentParameters.put("F3", "");
+			try {
+				sms.sendOrderConfermation(new Long(phone), new Long(templateId), orderDependentParameters);
+			} catch (NumberFormatException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return p;
+
+	}
+	@Override
+	public PlanSubscription updatePlanSubscription(
+			PlanSubscription planSubscription) {
+		PlanSubscription p =userDAO.updatePlanSubscription(planSubscription);
+		if("HM200".equals(p.getResponseStatus().getResponseCode())){
+			String templateId=configReader.getValue("sms.updateplan");
+			SMSThirdPartyService sms=new SMSThirdPartyService();
+			String phone=planSubscription.getMobile();
+			Map<String,String> orderDependentParameters=new HashMap<String, String>();
+			orderDependentParameters.put("F1", "");
+			orderDependentParameters.put("F2", "");
+			//orderDependentParameters.put("F3", orderStatus.getExecutiveName()+" (+91 "+orderStatus.getExecutivePhone()+" )");	
+			orderDependentParameters.put("F3", "");
+			try {
+				sms.sendOrderConfermation(new Long(phone), new Long(templateId), orderDependentParameters);
+			} catch (NumberFormatException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		
+		}
+		return p;
+	}
+	@Override
+	public PlanSubscription cancelPlanSubscription(
+			PlanSubscription planSubscription) {
+		PlanSubscription p= userDAO.cancelPlanSubscription(planSubscription);
+		if("HM200".equals(p.getResponseStatus().getResponseCode())){
+			String templateId=configReader.getValue("sms.cancelplan");
+			SMSThirdPartyService sms=new SMSThirdPartyService();
+			String phone=planSubscription.getMobile();
+			Map<String,String> orderDependentParameters=new HashMap<String, String>();
+			orderDependentParameters.put("F1", "");
+			orderDependentParameters.put("F2", "");
+			//orderDependentParameters.put("F3", orderStatus.getExecutiveName()+" (+91 "+orderStatus.getExecutivePhone()+" )");	
+			orderDependentParameters.put("F3", "");
+			try {
+				sms.sendOrderConfermation(new Long(phone), new Long(templateId), orderDependentParameters);
+			} catch (NumberFormatException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		
+		}
+		return p;
+
+	}
+	@Override
+	public List<ComboDetails> getComboDetails() {
+		return userDAO.getComboDetails();
+	}
+	
+	@Override
+	public User changePassword(User user) {
+		String encPassword= StringEncrypterService.encryptString(user.getPassword1());
+		user.setPassword1(encPassword);
+		return userDAO.changePassword(user);
+
+	}
+	@Override
+	public List<PlanSubscription> comboDetailsByUser(User user) {
+		return userDAO.comboDetailsByUser(user);
+
+	}
+	@Override
+	public User mobileVerification(User usr) {
+		 User user=userDAO.mobileVerification(usr);
+		 ResponseStatus response=new ResponseStatus();
+		 if("HM200".equals(user.getResponseStatus().getResponseCode())){
+			 String code=userDAO.getMobileVerificationCode(user);
+			 if(!code.equals("FAIL")){
+					String templateId=configReader.getValue("sms.mobileverificationcode");
+					SMSThirdPartyService sms=new SMSThirdPartyService();
+					String phone=usr.getMobile();
+					Map<String,String> smsDependentParameters=new HashMap<String, String>();
+					smsDependentParameters.put("F1", code.toUpperCase());
+					smsDependentParameters.put("F2", "Mobile Number");
+					try {
+						sms.sendOrderConfermation(new Long(phone), new Long(templateId), smsDependentParameters);
+					}catch (Exception e) {
+						e.printStackTrace();
+						response.setResponseCode("HM103");
+						response.setResponseMessage(configReader.getValue("HM103"));
+						response.setErrorDetails(e.getMessage());
+						user.setResponseStatus(response);
+					}				
+			 }else{
+				 	response.setResponseCode("HM205");
+				 	response.setResponseMessage(configReader.getValue("HM205"));
+					user.setResponseStatus(response);
+			 }
+		 }
+		 return user;
+	}
+	@Override
+	public User emailVerification(User user) {
+		return userDAO.emailVerification(user);
+	}
+	@Override
+	public User updateMobileVerificationStatus(User user) {
+		return userDAO.updateMobileVerificationStatus(user);
+
 	}
 	
 		

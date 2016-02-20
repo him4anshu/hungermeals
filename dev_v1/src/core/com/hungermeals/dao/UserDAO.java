@@ -3,11 +3,13 @@ package com.hungermeals.dao;
 import java.util.List;
 
 import com.hungermeals.persist.Address;
+import com.hungermeals.persist.ComboDetails;
 import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.MailingDetails;
 import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.OrderDetails;
 import com.hungermeals.persist.OrderStatus;
+import com.hungermeals.persist.PlanSubscription;
 import com.hungermeals.persist.User;
 import com.hungermeals.persist.User1;
 
@@ -36,5 +38,25 @@ public interface UserDAO {
 	String getotp(String phoneNo,String encryptedOtp) throws Exception;
 
 	CouponTxn applyCouponCode(CouponTxn couponTxn);
+
+	PlanSubscription planSubscription(PlanSubscription planSubscription);
+
+	PlanSubscription updatePlanSubscription(PlanSubscription planSubscription);
+
+	PlanSubscription cancelPlanSubscription(PlanSubscription planSubscription);
+
+	List<ComboDetails> getComboDetails();
+
+	User changePassword(User user);
+
+	List<PlanSubscription> comboDetailsByUser(User user);
+
+	User mobileVerification(User user);
+
+	User emailVerification(User user);
+
+	String getMobileVerificationCode(User user);
+
+	User updateMobileVerificationStatus(User user);
 
 }

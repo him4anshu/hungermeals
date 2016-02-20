@@ -11,6 +11,7 @@ public class OrderStatus {
 	private int orderStatusCode;
 	private String totalAmount;
 	private String userPhone;
+	private ResponseStatus responseStatus;
 	
 	public long getOrderId() {
 		return orderId;
@@ -54,6 +55,12 @@ public class OrderStatus {
 	}
 	public void setUserPhone(String userPhone) {
 		this.userPhone = userPhone;
+	}
+	public ResponseStatus getResponseStatus() {
+		return responseStatus;
+	}
+	public void setResponseStatus(ResponseStatus responseStatus) {
+		this.responseStatus = responseStatus;
 	}
 	
 	

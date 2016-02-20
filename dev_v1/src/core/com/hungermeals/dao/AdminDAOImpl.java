@@ -22,6 +22,7 @@ import com.hungermeals.persist.Item;
 import com.hungermeals.persist.Order;
 import com.hungermeals.persist.OrderDetails;
 import com.hungermeals.persist.OrderStatus;
+import com.hungermeals.persist.PlanSubscription;
 import com.hungermeals.persist.ResponseStatus;
 import com.hungermeals.persist.User;
 
@@ -201,5 +202,61 @@ public class AdminDAOImpl implements AdminDAO{
 			response.setErrorDetails(e.getMessage());
 		}
 		return orderStatus;
+	}
+
+
+	@Override
+	public List<PlanSubscription> comboDetailsByUser(User user) {
+
+		List<PlanSubscription> planSubscription=new ArrayList<PlanSubscription>();
+		MapSqlParameterSource mapSqlParameterSourceAddress = new MapSqlParameterSource();
+		String orderStatusQuery="SELECT PHONE,LINE_1_BUILDING_NO,LINE_2_STREET_NO,CITY,PINCODE,ADDRESS_ID,"
+				+ "COMBO_ID,END_DATE,PAYMENT_MODE,PLAN_COST,PLAN_TYPE,SELECTED_DATE,"
+				+ "START_DATE,TIME_SLOT,ID from plan_subscription PS JOIN user_address UA ON PS.ADDRESS_ID=UA.USER_ADDRESS_ID";
+		
+		planSubscription=namedParameterJdbcTemplate.query(orderStatusQuery,mapSqlParameterSourceAddress, new RowMapper() {
+			@Override
+			public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
+				PlanSubscription planSubscription =new PlanSubscription();
+				planSubscription.setAddressId(rs.getInt("ADDRESS_ID"));
+				planSubscription.setComboId(rs.getInt("COMBO_ID")+"");
+				planSubscription.setEndDate(rs.getString("END_DATE"));
+				planSubscription.setPaymentMode(rs.getString("PAYMENT_MODE"));
+				planSubscription.setPlanCost(rs.getInt("PLAN_COST"));
+				planSubscription.setPlanSubscribeId(rs.getInt("ID"));
+				planSubscription.setPlanType(rs.getString("PLAN_TYPE"));
+				planSubscription.setSelectedDate(rs.getString("SELECTED_DATE"));
+				planSubscription.setStartDate(rs.getString("START_DATE"));
+				planSubscription.setTimeSlot(rs.getString("TIME_SLOT"));
+				Address address = new  Address();
+				try {
+					address.setAddressId(rs.getInt("ADDRESS_ID"));
+					address.setCity(rs.getString("CITY"));
+					address.setLine1BuildingNo(rs.getString("LINE_1_BUILDING_NO"));
+					address.setLine2StreetNo(rs.getString("LINE_2_STREET_NO"));
+					address.setpCode(rs.getString("PINCODE"));
+					address.setPhone(rs.getString("PHONE"));
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				planSubscription.setAddress(address);
+				ResponseStatus response=new ResponseStatus();
+				response.setResponseCode("HM200");
+				response.setResponseMessage(configReader.getValue("HM200"));
+				planSubscription.setResponseStatus(response);
+				return planSubscription;
+			}
+		});
+		if(planSubscription.size()==0){
+			ResponseStatus response=new ResponseStatus();
+			response.setResponseCode("HM204");
+			response.setResponseMessage(configReader.getValue("HM204"));
+			PlanSubscription pp=new PlanSubscription();
+			pp.setResponseStatus(response);
+		}
+		return planSubscription;
+	
+	
 	}
 }

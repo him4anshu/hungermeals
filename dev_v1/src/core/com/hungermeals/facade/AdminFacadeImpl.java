@@ -12,6 +12,7 @@ import com.hungermeals.dao.AdminDAO;
 import com.hungermeals.persist.Item;
 import com.hungermeals.persist.OrderDetails;
 import com.hungermeals.persist.OrderStatus;
+import com.hungermeals.persist.PlanSubscription;
 import com.hungermeals.persist.User;
 
 public class AdminFacadeImpl implements AdminFacade{
@@ -75,6 +76,11 @@ public class AdminFacadeImpl implements AdminFacade{
 	@Override
 	public List<Item> itemListByOrder(String orderId) {
 		return adminDAO.itemListByOrder(orderId);
+
+	}
+	@Override
+	public List<PlanSubscription> comboDetailsByUser(User user) {
+		return adminDAO.comboDetailsByUser(user);
 
 	}
 

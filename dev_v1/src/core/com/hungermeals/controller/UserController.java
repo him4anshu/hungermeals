@@ -15,11 +15,13 @@ import com.hungermeals.api.UserAPI;
 import com.hungermeals.common.SMSThirdPartyService;
 import com.hungermeals.dao.UserDAO;
 import com.hungermeals.persist.Address;
+import com.hungermeals.persist.ComboDetails;
 import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.MailingDetails;
 import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.OrderDetails;
 import com.hungermeals.persist.OrderStatus;
+import com.hungermeals.persist.PlanSubscription;
 import com.hungermeals.persist.ResponseStatus;
 import com.hungermeals.persist.User;
 import com.hungermeals.persist.User1;
@@ -137,4 +139,69 @@ public class UserController {
 	public CouponTxn applyCouponCode(CouponTxn couponTxn){
 		return userAPI.applyCouponCode(couponTxn);
 	}
+	
+	@POST
+	@Path("/planSubscription.json")
+    @Produces("application/json")
+	public PlanSubscription planSubscription(PlanSubscription planSubscription){
+		return userAPI.planSubscription(planSubscription);
+	}
+	
+	@POST
+	@Path("/updatePlanSubscription.json")
+    @Produces("application/json")
+	public PlanSubscription updatePlanSubscription(PlanSubscription planSubscription){
+		return userAPI.updatePlanSubscription(planSubscription);
+	}
+	
+	@POST
+	@Path("/cancelPlanSubscription.json")
+    @Produces("application/json")
+	public PlanSubscription cancelPlanSubscription(PlanSubscription planSubscription){
+		return userAPI.cancelPlanSubscription(planSubscription);
+	}
+	
+	@GET
+	@Path("/getComboDetails.json")
+    @Produces("application/json")
+	public List<ComboDetails> getComboDetails(){
+		return userAPI.getComboDetails();
+	}
+	
+	@POST
+	@Path("/comboDetailsByUser.json")
+    @Produces("application/json")
+	public List<PlanSubscription> comboDetails(User user){
+		return userAPI.comboDetailsByUser(user);
+	}
+	
+	@POST
+	@Path("/changePassword.json")
+    @Produces("application/json")
+	public User changePassword(User user){
+		return userAPI.changePassword(user);
+	}
+	
+	@POST
+	@Path("/mobileVerification.json")
+    @Produces("application/json")
+	public User mobileVerification(User user){
+		return userAPI.mobileVerification(user);
+	}
+	
+	@POST
+	@Path("/emailVerification.json")
+    @Produces("application/json")
+	public User emailVerification(User user){
+		return userAPI.emailVerification(user);
+	}
+	
+	@POST
+	@Path("/updateMobileVerificationStatus.json")
+    @Produces("application/json")
+	public User updateMobileVerificationStatus(User user){
+		return userAPI.updateMobileVerificationStatus(user);
+	}
+		
+	
 }
