@@ -213,7 +213,7 @@ public class UserDAOImpl implements UserDAO{
 		MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
 		mapSqlParameterSource.addValue("EMAIL", user.getEmail());
 		mapSqlParameterSource.addValue("E_PASSWORD", user.getPassword1());
-		String userIdQuery = "SELECT USER_ID,FIRST_NAME,USER_CODE,EMAIL,PHONE FROM user WHERE (EMAIL=:EMAIL OR PHONE=:EMAIL) AND (ENC_PASSWORD=:E_PASSWORD OR OTP=:E_PASSWORD) AND STATUS='A'";
+		String userIdQuery = "SELECT USER_ID,FIRST_NAME,USER_CODE,EMAIL,PHONE,MOBILE_VERIFICATION FROM user WHERE (EMAIL=:EMAIL OR PHONE=:EMAIL) AND (ENC_PASSWORD=:E_PASSWORD OR OTP=:E_PASSWORD) AND STATUS='A'";
 		try {
 			user=(User) namedParameterJdbcTemplate.queryForObject(userIdQuery,mapSqlParameterSource, new RowMapper(){
 				@Override

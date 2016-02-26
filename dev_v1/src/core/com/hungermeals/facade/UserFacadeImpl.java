@@ -282,8 +282,8 @@ public class UserFacadeImpl implements UserFacade{
 						user.setResponseStatus(response);
 					}				
 			 }else{
-				 	response.setResponseCode("HM205");
-				 	response.setResponseMessage(configReader.getValue("HM205"));
+				 	response.setResponseCode("HM206");
+				 	response.setResponseMessage(configReader.getValue("HM206"));
 					user.setResponseStatus(response);
 			 }
 		 }
