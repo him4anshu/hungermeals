@@ -1,6 +1,7 @@
 package com.hungermeals.facade;
 
 import java.util.List;
+import java.util.TreeMap;
 
 import com.hungermeals.persist.Address;
 import com.hungermeals.persist.ComboDetails;
@@ -57,5 +58,9 @@ public interface UserFacade {
 	User emailVerification(User user);
 
 	User updateMobileVerificationStatus(User user);
+
+	boolean cancelOrder(String orderId);
+
+	int paytmWalletResponse(TreeMap<String, String> parameters);
 
 }

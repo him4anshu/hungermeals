@@ -4,11 +4,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.hungermeals.common.ConfigReader;
+import com.hungermeals.common.PaytmService;
+import com.hungermeals.common.PayuService;
 import com.hungermeals.common.SMSThirdPartyService;
 import com.hungermeals.common.StringEncrypterService;
 import com.hungermeals.dao.UserDAO;
@@ -71,7 +74,7 @@ public class UserFacadeImpl implements UserFacade{
 	@Override
 	public OrderStatus orderConfirm(OrderDetails orderDetails) {
 		OrderStatus orderStatus = userDAO.orderConfirm(orderDetails);
-		if("Order placed".equals(orderStatus.getOrderStatusDesc())){
+		if("Order placed".equals(orderStatus.getOrderStatusDesc() ) && orderDetails.getOrderInfo().getPaymentMode().equalsIgnoreCase("COD")){
 			String templateId=configReader.getValue("sms.orderplaced4customer");
 			SMSThirdPartyService sms=new SMSThirdPartyService();
 			String phone=orderDetails.getUser().getMobile();
@@ -103,6 +106,12 @@ public class UserFacadeImpl implements UserFacade{
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+		}else if("Order placed".equals(orderStatus.getOrderStatusDesc() ) && orderDetails.getOrderInfo().getPaymentMode().equalsIgnoreCase("PAYTM")){
+			PaytmService paytmService = new PaytmService();
+			orderStatus.setWalletRequest(paytmService.paytmWalletRequestParameter(orderDetails,orderStatus));
+		}else if("Order placed".equals(orderStatus.getOrderStatusDesc() ) && orderDetails.getOrderInfo().getPaymentMode().equalsIgnoreCase("PAYU")){
+			PayuService payuService = new PayuService();
+			orderStatus.setWalletRequest(payuService.payuWalletRequestParameter(orderDetails,orderStatus));
 		}
 		
 		return orderStatus;
@@ -296,6 +305,16 @@ public class UserFacadeImpl implements UserFacade{
 	@Override
 	public User updateMobileVerificationStatus(User user) {
 		return userDAO.updateMobileVerificationStatus(user);
+
+	}
+	@Override
+	public boolean cancelOrder(String orderId) {
+		return userDAO.cancelOrder(orderId);
+
+	}
+	@Override
+	public int paytmWalletResponse(TreeMap<String, String> parameters) {
+		return userDAO.paytmWalletResponse(parameters);
 
 	}
 	

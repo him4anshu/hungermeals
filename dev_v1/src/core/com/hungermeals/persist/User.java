@@ -9,6 +9,7 @@ public class User {
 
 	private static final long serialVersionUID = -2316378855920052790L;
 	private long userId;
+	private String firstName;
 	private String uName;
 	private String lastName;
 	private String middleName;
@@ -188,6 +189,14 @@ public class User {
 
 	public void setEmailVerified(boolean emailVerified) {
 		this.emailVerified = emailVerified;
+	}
+
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
 	}	
 	
 	

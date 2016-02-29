@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import javax.mail.Multipart;
@@ -65,6 +66,7 @@ public class UserDAOImpl implements UserDAO{
 	private SimpleJdbcInsert insertIntoOrderItemTable;
 	private SimpleJdbcInsert insertIntoUserCouponMapping;
 	private SimpleJdbcInsert insertPlanSubscription;
+	private SimpleJdbcInsert insertPaytmWalletTrnx;
 
 
 
@@ -96,6 +98,12 @@ public class UserDAOImpl implements UserDAO{
 		insertPlanSubscription=new SimpleJdbcInsert(ds)
 		.withTableName("plan_subscription")									  
 		.usingGeneratedKeyColumns("id");
+		
+		insertPaytmWalletTrnx=new SimpleJdbcInsert(ds)
+		.withTableName("paytm_txn_details")									  
+		.usingGeneratedKeyColumns("id");
+		
+		
 		
 	}
 
@@ -138,6 +146,8 @@ public class UserDAOImpl implements UserDAO{
 					user.setuCode(ucode);
 					user.setuName(user.getEmail());
 					user.setUserStatus(true);
+					response.setResponseCode("HM200");
+					response.setResponseMessage(configReader.getValue("HM200"));
 					}catch (Exception e) {
 						user.setUserStatus(false);
 						e.printStackTrace();
@@ -213,7 +223,7 @@ public class UserDAOImpl implements UserDAO{
 		MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
 		mapSqlParameterSource.addValue("EMAIL", user.getEmail());
 		mapSqlParameterSource.addValue("E_PASSWORD", user.getPassword1());
-		String userIdQuery = "SELECT USER_ID,FIRST_NAME,USER_CODE,EMAIL,PHONE,MOBILE_VERIFICATION FROM user WHERE (EMAIL=:EMAIL OR PHONE=:EMAIL) AND (ENC_PASSWORD=:E_PASSWORD OR OTP=:E_PASSWORD) AND STATUS='A'";
+		String userIdQuery = "SELECT USER_ID,FIRST_NAME,USER_CODE,EMAIL,PHONE,MOBILE_VERIFICATION,FIRST_NAME FROM user WHERE (EMAIL=:EMAIL OR PHONE=:EMAIL) AND (ENC_PASSWORD=:E_PASSWORD OR OTP=:E_PASSWORD) AND STATUS='A'";
 		try {
 			user=(User) namedParameterJdbcTemplate.queryForObject(userIdQuery,mapSqlParameterSource, new RowMapper(){
 				@Override
@@ -226,10 +236,13 @@ public class UserDAOImpl implements UserDAO{
 					user.setuCode(rs.getString("USER_CODE"));
 					user.setuName(rs.getString("EMAIL"));
 					user.setMobile(rs.getString("PHONE"));
+					user.setFirstName(rs.getString("FIRST_NAME"));
 					user.setMobileVerified(rs.getBoolean("MOBILE_VERIFICATION"));
 					return user;
 				}
 			});
+			response.setResponseCode("HM200");
+			response.setResponseMessage(configReader.getValue("HM200"));
 		} catch (DataAccessException e) {
 			e.printStackTrace();
 			response.setResponseCode("HM103");
@@ -267,6 +280,8 @@ public class UserDAOImpl implements UserDAO{
 					address.setAddressId(addId);
 					user.setAddress(address);
 					user.setUserStatus(true);
+					response.setResponseCode("HM200");
+					response.setResponseMessage(configReader.getValue("HM200"));
 					}catch (Exception e) {
 						e.printStackTrace();
 						response.setResponseCode("HM103");
@@ -312,6 +327,8 @@ public class UserDAOImpl implements UserDAO{
 							return address;
 				}
 			});
+			response.setResponseCode("HM200");
+			response.setResponseMessage(configReader.getValue("HM200"));
 		} catch (DataAccessException e) {
 			e.printStackTrace();
 			response.setResponseCode("HM103");
@@ -1063,8 +1080,8 @@ public class UserDAOImpl implements UserDAO{
 		} catch (DataAccessException e) {
 			e.printStackTrace();
 			planSubscription.setUpdatedStatus(false);
-			res.setResponseCode("HM203");
-			res.setResponseMessage(configReader.getValue("HM203"));
+			res.setResponseCode("HM103");
+			res.setResponseMessage(configReader.getValue("HM103"));
 			res.setErrorDetails(e.getMessage());
 		}
 		planSubscription.setResponseStatus(res);
@@ -1145,8 +1162,8 @@ public class UserDAOImpl implements UserDAO{
 				}
 			} catch (DataAccessException e1) {
 				e1.printStackTrace();
-				response.setResponseCode("HM203");
-				response.setResponseMessage(configReader.getValue("HM203"));
+				response.setResponseCode("HM103");
+				response.setResponseMessage(configReader.getValue("HM103"));
 			}
 			return user;
 	}
@@ -1273,5 +1290,31 @@ public class UserDAOImpl implements UserDAO{
 		}
 		user.setResponseStatus(response);
 		return user;
+	}
+
+	@Override
+	public boolean cancelOrder(String orderId) {
+		String cancelOrder="UPDATE order_status SET ORDER_STATUS_ID=6 WHERE ORDER_ID="+orderId+"";
+		int updateResult=namedParameterJdbcTemplate.update(cancelOrder, new MapSqlParameterSource());
+		if(updateResult==1)
+				return true;
+			else
+				return false;		
+	}
+
+	@Override
+	public int paytmWalletResponse(TreeMap<String, String> parameters) {
+		MapSqlParameterSource data=new MapSqlParameterSource();
+		for (Map.Entry<String, String> entry : parameters.entrySet()){
+			 System.out.println(entry.getKey() + "/" + entry.getValue());
+			data.addValue(entry.getKey(), entry.getValue());
+			}
+		int addId=0;
+		try {
+			addId=insertPaytmWalletTrnx.executeAndReturnKey(data).intValue();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return addId;
 	}
 }

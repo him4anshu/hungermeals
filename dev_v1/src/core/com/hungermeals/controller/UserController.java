@@ -1,17 +1,27 @@
 package com.hungermeals.controller;
 
-import java.util.List;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.*;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+
+import net.sf.json.JSONObject;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.hungermeals.api.UserAPI;
+import com.hungermeals.common.PaytmConstants;
+import com.hungermeals.common.PayuConstant;
+import com.hungermeals.common.PayuService;
 import com.hungermeals.common.SMSThirdPartyService;
 import com.hungermeals.dao.UserDAO;
 import com.hungermeals.persist.Address;
@@ -25,6 +35,7 @@ import com.hungermeals.persist.PlanSubscription;
 import com.hungermeals.persist.ResponseStatus;
 import com.hungermeals.persist.User;
 import com.hungermeals.persist.User1;
+import com.paytm.merchant.CheckSumServiceHelper;
 
 
 public class UserController {
@@ -93,8 +104,9 @@ public class UserController {
 	@Path("/orderConfirm.json")
     @Produces("application/json")
 	@Consumes("application/json")
-	public OrderStatus orderConfirm(OrderDetails orderDetails){
-		return userAPI.orderConfirm(orderDetails);
+	public OrderStatus orderConfirm(OrderDetails orderDetails ,@Context HttpServletRequest request,@Context HttpServletResponse response){
+		OrderStatus orderStatus= userAPI.orderConfirm(orderDetails);
+		return orderStatus;
 	}
 	
 	
@@ -202,6 +214,105 @@ public class UserController {
 	public User updateMobileVerificationStatus(User user){
 		return userAPI.updateMobileVerificationStatus(user);
 	}
-		
 	
+	@GET
+	@Path("/paytmWalletResponse.json")
+    @Produces("application/json")
+	public String paytmWalletResponse(@Context HttpServletRequest request,@Context HttpServletResponse response){
+		System.out.println("paytmWalletResponse.json called by PAYTM");
+		Enumeration<String> paramNames = request.getParameterNames();
+		Map<String, String[]> mapData = request.getParameterMap();
+		TreeMap<String,String> parameters = new TreeMap<String,String>();
+		String paytmChecksum =  "";
+		while(paramNames.hasMoreElements()) {
+			String paramName = (String)paramNames.nextElement();
+			if(paramName.equals("CHECKSUMHASH")){
+				paytmChecksum = mapData.get(paramName)[0];
+			}else{
+				parameters.put(paramName,mapData.get(paramName)[0]);
+			}
+		}
+		//Inserting PAYTM response to database
+		int x=userAPI.paytmWalletResponse(parameters);
+
+		boolean isValideChecksum = false;
+		String outputHTML="";
+		try{
+			isValideChecksum = CheckSumServiceHelper.getCheckSumServiceHelper().verifycheckSum(PaytmConstants.MERCHANT_KEY,parameters,paytmChecksum);
+			if(isValideChecksum && parameters.containsKey("RESPCODE")){
+				if(parameters.get("RESPCODE").equals("01")){
+					outputHTML = parameters.toString();
+				}else{
+					outputHTML="<b>Payment Failed.</b>";
+					cancelOrder(parameters.get("ORDERID"));
+				}
+			}else{
+				outputHTML="<b>Checksum mismatched.</b>";
+				cancelOrder(parameters.get("ORDERID"));
+			}
+		}catch(Exception e){
+			outputHTML=e.toString();
+		}
+		PrintWriter out;
+		try {
+			out = response.getWriter();
+			out.println(outputHTML);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return outputHTML;
+	}
+	
+	@GET
+	@Path("/payumWalletResponse.json")
+    @Produces("application/json")
+	public String payumWalletResponse(@Context HttpServletRequest request,@Context HttpServletResponse response){
+		System.out.println("payumWalletResponse.json called by PAYTU");
+		Enumeration<String> paramNames = request.getParameterNames();
+		Map<String, String[]> mapData = request.getParameterMap();
+		TreeMap<String,String> parameters = new TreeMap<String,String>();
+		String payuChecksum =  "";
+		while(paramNames.hasMoreElements()) {
+			String paramName = (String)paramNames.nextElement();
+			if(paramName.equals("hash")){
+				payuChecksum = mapData.get(paramName)[0];
+			}else{
+				parameters.put(paramName,mapData.get(paramName)[0]);
+			}
+		}
+		//Inserting PAYTM response to database
+		//int x=userAPI.paytmWalletResponse(parameters);
+
+		boolean isValideChecksum = false;
+		String outputHTML="";
+		try{
+			isValideChecksum = PayuService.verifyCheckSumHash(parameters,payuChecksum);
+			if(isValideChecksum && parameters.containsKey("RESPCODE")){
+				if(parameters.get("RESPCODE").equals("01")){
+					outputHTML = parameters.toString();
+				}else{
+					outputHTML="<b>Payment Failed.</b>";
+					cancelOrder(parameters.get("ORDERID"));
+				}
+			}else{
+				outputHTML="<b>Checksum mismatched.</b>";
+				cancelOrder(parameters.get("ORDERID"));
+			}
+		}catch(Exception e){
+			outputHTML=e.toString();
+		}
+		PrintWriter out;
+		try {
+			out = response.getWriter();
+			out.println(outputHTML);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return outputHTML;
+	}
+	
+	public boolean cancelOrder(String orderId){
+		return userAPI.cancelOrder(orderId);
+	}
+
 }

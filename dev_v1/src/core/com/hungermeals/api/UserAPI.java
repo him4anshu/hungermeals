@@ -1,6 +1,7 @@
 package com.hungermeals.api;
 
 import java.util.List;
+import java.util.TreeMap;
 
 import com.hungermeals.persist.Address;
 import com.hungermeals.persist.ComboDetails;
@@ -38,5 +39,7 @@ public interface UserAPI {
 	User mobileVerification(User user);
 	User emailVerification(User user);
 	User updateMobileVerificationStatus(User user);
+	boolean cancelOrder(String orderId);
+	int paytmWalletResponse(TreeMap<String, String> parameters);
 
 }

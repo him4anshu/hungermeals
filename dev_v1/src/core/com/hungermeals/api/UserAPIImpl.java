@@ -1,6 +1,7 @@
 package com.hungermeals.api;
 
 import java.util.List;
+import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -141,6 +142,18 @@ public class UserAPIImpl implements UserAPI{
 	public User updateMobileVerificationStatus(User user) {
 		return userFacade.updateMobileVerificationStatus(user);
 
+	}
+
+	@Override
+	public boolean cancelOrder(String orderId) {
+		return userFacade.cancelOrder(orderId);
+
+	}
+
+	@Override
+	public int paytmWalletResponse(TreeMap<String, String> parameters) {
+		return userFacade.paytmWalletResponse(parameters);
+		
 	}
 
 

@@ -1,6 +1,10 @@
 package com.hungermeals.persist;
 
+import java.util.TreeMap;
+
 import javax.xml.bind.annotation.XmlRootElement;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @XmlRootElement(name="orderStatus")
 public class OrderStatus {
@@ -12,6 +16,9 @@ public class OrderStatus {
 	private String totalAmount;
 	private String userPhone;
 	private ResponseStatus responseStatus;
+	private String walletResponse;
+	private TreeMap<String,String> walletRequest;
+	private String walletRequestParameter;
 	
 	public long getOrderId() {
 		return orderId;
@@ -62,6 +69,23 @@ public class OrderStatus {
 	public void setResponseStatus(ResponseStatus responseStatus) {
 		this.responseStatus = responseStatus;
 	}
-	
-	
+	public String getWalletResponse() {
+		return walletResponse;
+	}
+	public void setWalletResponse(String walletResponse) {
+		this.walletResponse = walletResponse;
+	}
+	public TreeMap<String, String> getWalletRequest() {
+		return walletRequest;
+	}
+	public void setWalletRequest(TreeMap<String, String> walletRequest) {
+		this.walletRequest = walletRequest;
+	}
+	public String getWalletRequestParameter() {
+		return walletRequestParameter;
+	}
+	public void setWalletRequestParameter(String walletRequestParameter) {
+		this.walletRequestParameter = walletRequestParameter;
+	}
+		
 }
