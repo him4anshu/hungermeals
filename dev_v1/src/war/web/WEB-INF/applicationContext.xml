@@ -132,5 +132,5 @@
 			<ref bean="jaxbProvider" />
 		</jaxrs:providers>
 	</jaxrs:server>
-		
+	
 </beans>
