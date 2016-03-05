@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.hungermeals.common.ConfigReader;
+import com.hungermeals.common.PaytmConstants;
 import com.hungermeals.common.PaytmService;
 import com.hungermeals.common.PayuService;
 import com.hungermeals.common.SMSThirdPartyService;
@@ -26,6 +27,7 @@ import com.hungermeals.persist.PlanSubscription;
 import com.hungermeals.persist.ResponseStatus;
 import com.hungermeals.persist.User;
 import com.hungermeals.persist.User1;
+import com.paytm.merchant.CheckSumServiceHelper;
 
 public class UserFacadeImpl implements UserFacade{
 
@@ -108,7 +110,16 @@ public class UserFacadeImpl implements UserFacade{
 			}
 		}else if("Order placed".equals(orderStatus.getOrderStatusDesc() ) && orderDetails.getOrderInfo().getPaymentMode().equalsIgnoreCase("PAYTM")){
 			PaytmService paytmService = new PaytmService();
-			orderStatus.setWalletRequest(paytmService.paytmWalletRequestParameter(orderDetails,orderStatus));
+			TreeMap<String,String> parameters=paytmService.paytmWalletRequestParameter(orderDetails,orderStatus);
+			orderStatus.setWalletRequest(parameters);
+			String checksum="";
+			try {
+				checksum = CheckSumServiceHelper.getCheckSumServiceHelper().genrateCheckSum(PaytmConstants.MERCHANT_KEY, parameters);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			orderStatus.setChecksum(checksum);
 		}else if("Order placed".equals(orderStatus.getOrderStatusDesc() ) && orderDetails.getOrderInfo().getPaymentMode().equalsIgnoreCase("PAYU")){
 			PayuService payuService = new PayuService();
 			orderStatus.setWalletRequest(payuService.payuWalletRequestParameter(orderDetails,orderStatus));

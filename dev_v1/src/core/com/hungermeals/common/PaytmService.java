@@ -20,9 +20,9 @@ import com.paytm.merchant.CheckSumServiceHelper;
 	public TreeMap<String,String> paytmWalletRequestParameter(OrderDetails orderDetails,
 			OrderStatus orderStatus) {
 		TreeMap<String,String> parameters = generatePostParameter(orderDetails,orderStatus);
-		String checksumhash=getGenratedCheckSum(parameters);
-		parameters.put("CHECKSUMHASH", checksumhash);
-		String postParameters="";
+		//String checksumhash=getGenratedCheckSum(parameters);
+		//parameters.put("CHECKSUMHASH", checksumhash);
+		//String postParameters="";
 		/*for(Map.Entry<String,String> entry : parameters.entrySet()) {
 			String key = entry.getKey();
 			String value = entry.getValue();
@@ -83,14 +83,14 @@ import com.paytm.merchant.CheckSumServiceHelper;
 		parameters.put("ORDER_ID",orderStatus.getOrderId()+"");
 		parameters.put("CUST_ID", orderDetails.getUser().getuCode());
 		parameters.put("TXN_AMOUNT", orderDetails.getOrderInfo().getTotalAmount()+"");
-		parameters.put("REQUEST_TYPE",PaytmConstants.REQUEST_TYPE);
+		//parameters.put("REQUEST_TYPE",PaytmConstants.REQUEST_TYPE);
 		parameters.put("MID",PaytmConstants.MID);
 		parameters.put("CHANNEL_ID",PaytmConstants.CHANNEL_ID);
 		parameters.put("INDUSTRY_TYPE_ID",PaytmConstants.INDUSTRY_TYPE_ID);
 		parameters.put("WEBSITE",PaytmConstants.WEBSITE);
 		parameters.put("MOBILE_NO", orderDetails.getUser().getMobile());
 		parameters.put("EMAIL", orderDetails.getUser().getEmail());
-		parameters.put("ORDER_DETAILS", "Some messages");
+		//parameters.put("ORDER_DETAILS", "Some messages");
 		//parameters.put("VERIFIED_BY", "MOBILE_NO"); //EMAIL or MOBILE_NO
 		//parameters.put("IS_USER_VERIFIED", "YES"); //YES /NO
 		parameters.put("CALLBACK_URL", PaytmConstants.CALLBACK_URL);

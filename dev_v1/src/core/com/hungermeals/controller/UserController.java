@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
 
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
@@ -13,10 +15,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 
 import net.sf.json.JSONObject;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.hungermeals.api.UserAPI;
 import com.hungermeals.common.PaytmConstants;
@@ -216,7 +221,7 @@ public class UserController {
 	}
 	
 	@GET
-	@Path("/paytmWalletResponse.json")
+	@Path("/paytmWalletResponse1.json")
     @Produces("application/json")
 	public String paytmWalletResponse(@Context HttpServletRequest request,@Context HttpServletResponse response){
 		System.out.println("paytmWalletResponse.json called by PAYTM");
@@ -263,7 +268,7 @@ public class UserController {
 		return outputHTML;
 	}
 	
-	@GET
+	@POST
 	@Path("/payumWalletResponse.json")
     @Produces("application/json")
 	public String payumWalletResponse(@Context HttpServletRequest request,@Context HttpServletResponse response){
@@ -314,5 +319,76 @@ public class UserController {
 	public boolean cancelOrder(String orderId){
 		return userAPI.cancelOrder(orderId);
 	}
+	
+	@GET
+	@Path("/paytmCheckSumGenrator.json")
+    @Produces("application/json")
+	public String paytmCheckSumGenrator(){
+		return null;
+	}
+	
+	@GET
+	@Path("/paytmCheckSumValidator.json")
+    @Produces("application/json")
+	public boolean paytmCheckSumValidator(){
+		return false;
+	}
 
+	@POST
+	@Path("/paytmWalletResponse.json")
+	@Consumes("application/x-www-form-urlencoded")
+	public void paytmRedirect(@Context HttpServletRequest request,@Context HttpServletResponse response){
+		System.out.println("paytmWalletResponse.json called by PAYTM");
+		Enumeration<String> paramNames = request.getParameterNames();
+		Map<String, String[]> mapData = request.getParameterMap();
+		TreeMap<String,String> parameters = new TreeMap<String,String>();
+		String paytmChecksum =  "";
+		while(paramNames.hasMoreElements()) {
+			String paramName = (String)paramNames.nextElement();
+			if(paramName.equals("CHECKSUMHASH")){
+				paytmChecksum = mapData.get(paramName)[0];
+			}else{
+				parameters.put(paramName,mapData.get(paramName)[0]);
+			}
+		}
+		//Inserting PAYTM response to database
+		try {
+			int x=userAPI.paytmWalletResponse(parameters);
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+		boolean isValideChecksum = false;
+		String outputHTML="";
+		try{
+			isValideChecksum = CheckSumServiceHelper.getCheckSumServiceHelper().verifycheckSum(PaytmConstants.MERCHANT_KEY,parameters,paytmChecksum);
+			 RequestDispatcher rd=null; 
+			if(isValideChecksum && parameters.containsKey("RESPCODE")){
+				if(parameters.get("RESPCODE").equals("01")){
+					rd=request.getRequestDispatcher("/jsp/o_confirm.jsp");
+					outputHTML = parameters.toString();
+				}else if(parameters.get("RESPCODE").equals("141") ||
+						parameters.get("RESPCODE").equals("810") ||
+						parameters.get("RESPCODE").equals("8102")||
+						parameters.get("RESPCODE").equals("8103")){
+					outputHTML="<b>Payment Failed.</b>";
+					cancelOrder(parameters.get("ORDERID"));
+					rd=request.getRequestDispatcher("/jsp/payment.jsp");
+				}else if(parameters.get("RESPCODE").equals("227")){
+					outputHTML="<b>Payment Failed.</b>";
+					cancelOrder(parameters.get("ORDERID"));
+					rd=request.getRequestDispatcher("/jsp/error.jsp");
+				}
+			}else{
+				outputHTML="<b>Checksum mismatched.</b>";
+				cancelOrder(parameters.get("ORDERID"));
+				rd=request.getRequestDispatcher("/jsp/error.jsp");
+			}
+			rd.forward(request, response);
+		}catch(Exception e){
+			outputHTML=e.toString();
+		}
+		 
+	}
 }

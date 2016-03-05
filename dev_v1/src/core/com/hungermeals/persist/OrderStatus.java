@@ -4,7 +4,6 @@ import java.util.TreeMap;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @XmlRootElement(name="orderStatus")
 public class OrderStatus {
@@ -19,6 +18,7 @@ public class OrderStatus {
 	private String walletResponse;
 	private TreeMap<String,String> walletRequest;
 	private String walletRequestParameter;
+	private String checksum;
 	
 	public long getOrderId() {
 		return orderId;
@@ -86,6 +86,12 @@ public class OrderStatus {
 	}
 	public void setWalletRequestParameter(String walletRequestParameter) {
 		this.walletRequestParameter = walletRequestParameter;
+	}
+	public String getChecksum() {
+		return checksum;
+	}
+	public void setChecksum(String checksum) {
+		this.checksum = checksum;
 	}
 		
 }
