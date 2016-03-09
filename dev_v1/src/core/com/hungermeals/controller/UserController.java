@@ -220,59 +220,12 @@ public class UserController {
 		return userAPI.updateMobileVerificationStatus(user);
 	}
 	
-	@GET
-	@Path("/paytmWalletResponse1.json")
-    @Produces("application/json")
-	public String paytmWalletResponse(@Context HttpServletRequest request,@Context HttpServletResponse response){
-		System.out.println("paytmWalletResponse.json called by PAYTM");
-		Enumeration<String> paramNames = request.getParameterNames();
-		Map<String, String[]> mapData = request.getParameterMap();
-		TreeMap<String,String> parameters = new TreeMap<String,String>();
-		String paytmChecksum =  "";
-		while(paramNames.hasMoreElements()) {
-			String paramName = (String)paramNames.nextElement();
-			if(paramName.equals("CHECKSUMHASH")){
-				paytmChecksum = mapData.get(paramName)[0];
-			}else{
-				parameters.put(paramName,mapData.get(paramName)[0]);
-			}
-		}
-		//Inserting PAYTM response to database
-		int x=userAPI.paytmWalletResponse(parameters);
-
-		boolean isValideChecksum = false;
-		String outputHTML="";
-		try{
-			isValideChecksum = CheckSumServiceHelper.getCheckSumServiceHelper().verifycheckSum(PaytmConstants.MERCHANT_KEY,parameters,paytmChecksum);
-			if(isValideChecksum && parameters.containsKey("RESPCODE")){
-				if(parameters.get("RESPCODE").equals("01")){
-					outputHTML = parameters.toString();
-				}else{
-					outputHTML="<b>Payment Failed.</b>";
-					cancelOrder(parameters.get("ORDERID"));
-				}
-			}else{
-				outputHTML="<b>Checksum mismatched.</b>";
-				cancelOrder(parameters.get("ORDERID"));
-			}
-		}catch(Exception e){
-			outputHTML=e.toString();
-		}
-		PrintWriter out;
-		try {
-			out = response.getWriter();
-			out.println(outputHTML);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return outputHTML;
-	}
 	
 	@POST
 	@Path("/payumWalletResponse.json")
     @Produces("application/json")
 	public String payumWalletResponse(@Context HttpServletRequest request,@Context HttpServletResponse response){
-		System.out.println("payumWalletResponse.json called by PAYTU");
+		System.out.println("payumWalletResponse.json called by PAYU");
 		Enumeration<String> paramNames = request.getParameterNames();
 		Map<String, String[]> mapData = request.getParameterMap();
 		TreeMap<String,String> parameters = new TreeMap<String,String>();
@@ -366,8 +319,8 @@ public class UserController {
 			 RequestDispatcher rd=null; 
 			if(isValideChecksum && parameters.containsKey("RESPCODE")){
 				if(parameters.get("RESPCODE").equals("01")){
-					rd=request.getRequestDispatcher("/jsp/o_confirm.jsp");
 					outputHTML = parameters.toString();
+					rd=request.getRequestDispatcher("/jsp/o_confirm.jsp");
 				}else if(parameters.get("RESPCODE").equals("141") ||
 						parameters.get("RESPCODE").equals("810") ||
 						parameters.get("RESPCODE").equals("8102")||
@@ -378,7 +331,10 @@ public class UserController {
 				}else if(parameters.get("RESPCODE").equals("227")){
 					outputHTML="<b>Payment Failed.</b>";
 					cancelOrder(parameters.get("ORDERID"));
-					rd=request.getRequestDispatcher("/jsp/error.jsp");
+					rd=request.getRequestDispatcher("/jsp/payment.jsp");
+				}else{
+					cancelOrder(parameters.get("ORDERID"));
+					rd=request.getRequestDispatcher("/jsp/payment.jsp");
 				}
 			}else{
 				outputHTML="<b>Checksum mismatched.</b>";
@@ -390,5 +346,72 @@ public class UserController {
 			outputHTML=e.toString();
 		}
 		 
+	}
+	
+	@POST
+	@Path("/payumWalletSuccessResponse.json")
+	@Consumes("application/x-www-form-urlencoded")
+	public void payumWalletSuccessResponse(@Context HttpServletRequest request,@Context HttpServletResponse response){
+		System.out.println("payumWalletSuccessResponse.json called by PAYU");
+		Enumeration<String> paramNames = request.getParameterNames();
+		Map<String, String[]> mapData = request.getParameterMap();
+		TreeMap<String,String> parameters = new TreeMap<String,String>();
+		String hash =  "";
+		while(paramNames.hasMoreElements()) {
+			String paramName = (String)paramNames.nextElement();
+			if(paramName.equals("hash")){
+				hash = mapData.get(paramName)[0];
+			}else{
+				parameters.put(paramName,mapData.get(paramName)[0]);
+			}
+			System.out.println(paramName+"===>"+mapData.get(paramName)[0]);
+		}
+		 RequestDispatcher rd=null; 
+		 rd=request.getRequestDispatcher("/jsp/o_confirm.jsp");
+	}
+	
+	@POST
+	@Path("/payumWalletFailureResponse.json")
+	@Consumes("application/x-www-form-urlencoded")
+	public void payumWalletFailureResponse(@Context HttpServletRequest request,@Context HttpServletResponse response){
+		System.out.println("payumWalletFailureResponse.json called by PAYU");
+		Enumeration<String> paramNames = request.getParameterNames();
+		Map<String, String[]> mapData = request.getParameterMap();
+		TreeMap<String,String> parameters = new TreeMap<String,String>();
+		String hash =  "";
+		while(paramNames.hasMoreElements()) {
+			String paramName = (String)paramNames.nextElement();
+			if(paramName.equals("hash")){
+				hash = mapData.get(paramName)[0];
+			}else{
+				parameters.put(paramName,mapData.get(paramName)[0]);
+			}
+			System.out.println(paramName+"===>"+mapData.get(paramName)[0]);
+		}
+		 RequestDispatcher rd=null;
+		rd=request.getRequestDispatcher("/jsp/payment.jsp");
+	}
+	
+	@POST
+	@Path("/payumWalletCancelResponse.json")
+	@Consumes("application/x-www-form-urlencoded")
+	public void payumWalletCancelResponse(@Context HttpServletRequest request,@Context HttpServletResponse response){
+		System.out.println("payumWalletCancelResponse.json called by PAYU");
+		Enumeration<String> paramNames = request.getParameterNames();
+		Map<String, String[]> mapData = request.getParameterMap();
+		TreeMap<String,String> parameters = new TreeMap<String,String>();
+		String hash =  "";
+		while(paramNames.hasMoreElements()) {
+			String paramName = (String)paramNames.nextElement();
+			if(paramName.equals("hash")){
+				hash = mapData.get(paramName)[0];
+			}else{
+				parameters.put(paramName,mapData.get(paramName)[0]);
+			}
+			System.out.println(paramName+"===>"+mapData.get(paramName)[0]);
+		}
+		 RequestDispatcher rd=null;
+		 rd=request.getRequestDispatcher("/jsp/payment.jsp");
+
 	}
 }

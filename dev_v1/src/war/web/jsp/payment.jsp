@@ -11,17 +11,17 @@
     <title>HungerMeals</title>
 
     <!-- Favicons-->
-    <link rel="shortcut icon" href="../images/favicon.ico" type="image/x-icon">
-    <link rel="apple-touch-icon" type="image/x-icon" href="../images/apple-touch-icon-57x57-precomposed.png">
-    <link rel="apple-touch-icon" type="image/x-icon" sizes="72x72" href="../images/apple-touch-icon-72x72-precomposed.png">
-    <link rel="apple-touch-icon" type="image/x-icon" sizes="114x114" href="../images/apple-touch-icon-114x114-precomposed.png">
-    <link rel="apple-touch-icon" type="image/x-icon" sizes="144x144" href="../images/apple-touch-icon-144x144-precomposed.png">
+    <link rel="shortcut icon" href="http://localhost:8080/hungermeals/images/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" type="image/x-icon" href="http://localhost:8080/hungermeals/images/apple-touch-icon-57x57-precomposed.png">
+    <link rel="apple-touch-icon" type="image/x-icon" sizes="72x72" href="http://localhost:8080/hungermeals/images/apple-touch-icon-72x72-precomposed.png">
+    <link rel="apple-touch-icon" type="image/x-icon" sizes="114x114" href="http://localhost:8080/hungermeals/images/apple-touch-icon-114x114-precomposed.png">
+    <link rel="apple-touch-icon" type="image/x-icon" sizes="144x144" href="http://localhost:8080/hungermeals/images/apple-touch-icon-144x144-precomposed.png">
     
     <!-- BASE CSS -->
-    <link href="../scripts/css/base.css" rel="stylesheet">
+    <link href="http://localhost:8080/hungermeals/scripts/css/base.css" rel="stylesheet">
     
     <!-- Radio and check inputs -->
-    <link href="../scripts/css/skins/square/grey.css" rel="stylesheet">
+    <link href="http://localhost:8080/hungermeals/scripts/css/skins/square/grey.css" rel="stylesheet">
 
 </head>
 
@@ -49,15 +49,15 @@
             </div>
             <div class="col-md-3 col-sm-3 col-xs-3 text-center">
                 <a href="index.jsp" id="logo">
-                <img src="../images/logo.png" width="190" height="23" alt="" data-retina="true" class="hidden-xs">
-                <img src="../images/logo_mobile.png" width="30" height="23" alt="" data-retina="true" class="hidden-lg hidden-md hidden-sm">
+                <img src="http://localhost:8080/hungermeals/images/logo.png" width="190" height="23" alt="" data-retina="true" class="hidden-xs">
+                <img src="http://localhost:8080/hungermeals/images/logo_mobile.png" width="30" height="23" alt="" data-retina="true" class="hidden-lg hidden-md hidden-sm">
                 </a>
             </div>
             <nav class="col-md-5 col-sm-5 col-xs-5">
             <a class="cmn-toggle-switch cmn-toggle-switch__htx open_close" href="javascript:void(0);"><span>Menu mobile</span></a>
             <div class="main-menu">
                 <div id="header_menu">
-                    <img src="../images/logo.png" width="190" height="23" alt="" data-retina="true">
+                    <img src="http://localhost:8080/hungermeals/images/logo.png" width="190" height="23" alt="" data-retina="true">
                 </div>
                 <a href="#" class="open_close" id="close_in"><i class="icon_close"></i></a>
                  <ul id="head_menu">
@@ -73,7 +73,7 @@
     <!-- End Header =============================================== -->
 
 <!-- SubHeader =============================================== -->
-<section class="parallax-window"  id="short"  data-parallax="scroll" data-image-src="../images/payment.jpg" data-natural-width="1400" data-natural-height="350">
+<section class="parallax-window"  id="short"  data-parallax="scroll" data-image-src="http://localhost:8080/hungermeals/images/payment.jpg" data-natural-width="1400" data-natural-height="350">
     <div id="subheader">
     	<div id="sub_content">
     	 <h1>Place your order</h1>
@@ -167,6 +167,10 @@
                     </div>
                     <div class="payment_select nomargin">
                         <label><input type="radio" value="COD" name="payment_method" class="icheck">Pay with cash</label>
+                        <i class="icon_wallet"></i>
+                    </div>
+                    <div class="payment_select nomargin">
+                        <label><input type="radio" value="PAYU" name="payment_method" class="icheck">Pay with PayU</label>
                         <i class="icon_wallet"></i>
                     </div>
                 </div><!-- End box_style_1 -->
@@ -270,18 +274,18 @@
 <!-- End hm_alert modal -->
     
 <!-- COMMON SCRIPTS -->
-<script src="../scripts/js/jquery-1.11.2.min.js"></script>
-<script src="../scripts/js/common_scripts_min.js"></script>
-<script src="../scripts/js/functions.js"></script>
-<script src="../scripts/assets/validate.js"></script>
+<script src="http://localhost:8080/hungermeals/scripts/js/jquery-1.11.2.min.js"></script>
+<script src="http://localhost:8080/hungermeals/scripts/js/common_scripts_min.js"></script>
+<script src="http://localhost:8080/hungermeals/scripts/js/functions.js"></script>
+<script src="http://localhost:8080/hungermeals/scripts/assets/validate.js"></script>
 
 <!-- SPECIFIC SCRIPTS -->
-<script src="../scripts/js/jquery.pin.min.js"></script>
+<script src="http://localhost:8080/hungermeals/scripts/js/jquery.pin.min.js"></script>
 
 <!-- HUNGER SCRIPTS -->
-<script src="../scripts/jscript/js-cookie.js"></script>
-<script src="../scripts/jscript/common.js"></script>
-<script src="../scripts/jscript/payment.js"></script>
+<script src="http://localhost:8080/hungermeals/scripts/jscript/js-cookie.js"></script>
+<script src="http://localhost:8080/hungermeals/scripts/jscript/common.js"></script>
+<script src="http://localhost:8080/hungermeals/scripts/jscript/payment.js"></script>
 
 </body>
 </html>

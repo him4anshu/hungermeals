@@ -6,25 +6,14 @@
 
 Enumeration<String> paramNames = request.getParameterNames();
 Map<String, String[]> mapData = request.getParameterMap();
-//TreeMap<String,String> parameters = new TreeMap<String,String>();
+TreeMap<String,String> parameters = new TreeMap<String,String>();
 String paytmChecksum =  "";
-//while(paramNames.hasMoreElements()) {
-	//String paramName = (String)paramNames.nextElement();
-	//parameters.put(paramName,mapData.get(paramName)[0]);	
-//}
-//parameters.put("MID",PaytmConstants.MID);
-//parameters.put("CHANNEL_ID",PaytmConstants.CHANNEL_ID);
-//parameters.put("INDUSTRY_TYPE_ID",PaytmConstants.INDUSTRY_TYPE_ID);
-//parameters.put("WEBSITE",PaytmConstants.WEBSITE);
-//parameters.put("MOBILE_NO","8123719594");
-//parameters.put("EMAIL","himanshuonemail@gmail.com");
-/* parameters.put("CALLBACK_URL", "http://localhost:8080/paytm_java/pgResponse.jsp");
- */
- //parameters.put("CALLBACK_URL", "http://hungermeals.com/o_confirm.html");
-  TreeMap<String,String> parameters =(TreeMap<String,String>) request.getAttribute("parameters");
+while(paramNames.hasMoreElements()) {
+	String paramName = (String)paramNames.nextElement();
+	parameters.put(paramName,mapData.get(paramName)[0]);	
+}
+
 String checkSum =  CheckSumServiceHelper.getCheckSumServiceHelper().genrateCheckSum(PaytmConstants.MERCHANT_KEY, parameters);
-
-
 StringBuilder outputHtml = new StringBuilder();
 outputHtml.append("<!DOCTYPE html PUBLIC '-//W3C//DTD HTML 4.01 Transitional//EN' 'http://www.w3.org/TR/html4/loose.dtd'>");
 outputHtml.append("<html>");

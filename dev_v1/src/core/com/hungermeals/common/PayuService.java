@@ -47,8 +47,8 @@ public class PayuService {
 	public TreeMap<String,String> payuWalletRequestParameter(OrderDetails orderDetails,
 			OrderStatus orderStatus) {
 		TreeMap<String,String> parameters = generatePostParameter(orderDetails,orderStatus);
-		String checksumhash=getGenratedCheckSum(parameters);
-		parameters.put("hash",checksumhash);
+		/*String checksumhash=getGenratedCheckSum(parameters);
+		parameters.put("hash",checksumhash);*/
 		return parameters;
 	}
 	
@@ -57,10 +57,11 @@ public class PayuService {
 		TreeMap<String,String> parameters = new TreeMap<String,String>();
 		parameters.put("key",PayuConstant.MERCHANT_KEY);
 		parameters.put("txnid", orderStatus.getOrderId()+"");
+		parameters.put("udf2", orderStatus.getOrderId()+"");
 		parameters.put("amount", orderDetails.getOrderInfo().getTotalAmount()+"");
 		parameters.put("productinfo","prppppppppp");
-		parameters.put("firstname",orderDetails.getUser().getuName());
-		parameters.put("email",orderDetails.getUser().getFirstName());
+		parameters.put("firstname",orderDetails.getUser().getFirstName());
+		parameters.put("email",orderDetails.getUser().getEmail());
 		parameters.put("phone",orderDetails.getUser().getMobile());
 		parameters.put("surl",PayuConstant.CALLBACK_SUCCESS_URL);
 		parameters.put("furl", PayuConstant.CALLBACK_FAILURE_URL);

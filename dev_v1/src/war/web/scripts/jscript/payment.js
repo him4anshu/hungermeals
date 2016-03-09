@@ -206,6 +206,11 @@ function order_confirm_call(finalObj){
 				    	setPaytm(finalObj);
 				    	// redir('loadingPayment.jsp');
 				    	//delete orderPay session
+			    	}else if(checkPayMode == "PAYU"){
+				    	// localStorage.setItem("orderPay", JSON.stringify(finalObj));
+				    	setPayu(finalObj);
+				    	// redir('loadingPayment.jsp');
+				    	//delete orderPay session
 			    	}
 		    	}else{
 		    		alert(data.orderStatus.responseStatus.responseMessage);
@@ -222,15 +227,30 @@ function order_confirm_call(finalObj){
 }
 
 function setPaytm(finalObj){
-	var url = "https://pguat.paytm.com/oltp-web/processTransaction";
+	//var url = "https://pguat.paytm.com/oltp-web/processTransaction";
+	var url = "../jsp/paytmRedirect.jsp";
 	var inputs = "";
 	jQuery.each(finalObj.orderStatus.walletRequest.entry, function(i,val){
 				var key_value = (val.value)? val.value : ""; 
 				// $("input[name='"+val.key+"']").val(key_value);
-				inputs += "<input type='text' name='"+val.key+"' value='"+key_value+"'>";
+				inputs += "<input type='hidden' name='"+val.key+"' value='"+key_value+"'>";				
 	});
-	alert(finalObj.orderStatus.checksum);
-        inputs += "<input type='text' name='CHECKSUMHASH' value='"+finalObj.orderStatus.checksum+"'>";
+	var form = $('<form action="' + url + '" method="post">' +
+					inputs+
+				'</form>');
+	$('body').append(form);
+	form.submit();
+}
+
+function setPayu(finalObj){
+	//var url = "https://secure.payu.in/_payment";
+	var url = "../jsp/payuRedirect.jsp";
+	var inputs = "";
+	jQuery.each(finalObj.orderStatus.walletRequest.entry, function(i,val){
+				var key_value = (val.value)? val.value : ""; 
+				// $("input[name='"+val.key+"']").val(key_value);
+				inputs += "<input type='hidden' name='"+val.key+"' value='"+key_value+"'>";				
+	});
 	var form = $('<form action="' + url + '" method="post">' +
 					inputs+
 				'</form>');

@@ -114,6 +114,7 @@ public class UserDAOImpl implements UserDAO{
 			user.setResponseStatus(response);
 			MapSqlParameterSource paramMap=new MapSqlParameterSource();
 			paramMap.addValue("EMAIL",user.getEmail());	
+			paramMap.addValue("PHONE",user.getMobile());	
 			String trackCountSql="SELECT count(*) FROM user WHERE EMAIL=:EMAIL OR PHONE=:PHONE";
 			int tCount = 0;
 			try {
@@ -506,7 +507,7 @@ public class UserDAOImpl implements UserDAO{
 		mapSqlParameterSourceAddress.addValue("USER_ID", userId);
 		String orderStatusQuery="SELECT O.ORDER_ID,O.TOTAL_AMOUNT,OSC.STATUS_CODE,OSC.DESCRIPTION,OS.EXECUTIVE_NAME,OS.EXECUTIVE_PHONE "
 				+"  FROM order_details O"
-				+"	JOIN order_status OS ON O.ORDER_ID=OS.ORDER_ID AND O.STATUS='A'"
+				+"	JOIN order_status OS ON O.ORDER_ID=OS.ORDER_ID AND O.STATUS='A' AND OS.ORDER_STATUS_ID!=6"
 				+"	JOIN order_status_category OSC ON OS.ORDER_STATUS_ID=OSC.STATUS_CODE"
 				+"	WHERE O.USER_ID=:USER_ID ORDER BY O.ORDER_ID DESC";
 		
