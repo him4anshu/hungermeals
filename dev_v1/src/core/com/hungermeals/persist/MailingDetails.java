@@ -1,5 +1,8 @@
 package com.hungermeals.persist;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement(name="mailingDetails")
 public class MailingDetails {
 	private String ucode;
 	private String templateName;

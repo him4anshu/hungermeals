@@ -43,6 +43,11 @@ props.put("mail.transport.protocol", "smtp");
 props.put("mail.smtp.user",user);
 props.put("mail.smtp.password",pass);
 
+props.setProperty("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
+props.setProperty("mail.smtp.socketFactory.fallback","false");
+props.setProperty("mail.smtp.socketFactory.port",port);
+props.put("mail.smtp.startssl.enable", "true");
+
 
 
 Session mailSession = Session.getInstance(props);

@@ -41,5 +41,9 @@ public interface UserAPI {
 	User updateMobileVerificationStatus(User user);
 	boolean cancelOrder(String orderId);
 	int paytmWalletResponse(TreeMap<String, String> parameters);
+	boolean sendMessage(String orderId);
+	boolean sendEmail(String orderId);
+	List<Menu> allMenuDetail();
+	List<Menu> menu();
 
 }

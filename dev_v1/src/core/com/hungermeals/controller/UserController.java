@@ -273,6 +273,14 @@ public class UserController {
 		return userAPI.cancelOrder(orderId);
 	}
 	
+	public boolean sendMessage(String orderId){
+		return userAPI.sendMessage(orderId);
+	}
+	
+	public boolean sendEmail(String orderId){
+		return userAPI.sendEmail(orderId);
+	}
+	
 	@GET
 	@Path("/paytmCheckSumGenrator.json")
     @Produces("application/json")
@@ -291,7 +299,7 @@ public class UserController {
 	@Path("/paytmWalletResponse.json")
 	@Consumes("application/x-www-form-urlencoded")
 	public void paytmRedirect(@Context HttpServletRequest request,@Context HttpServletResponse response){
-		System.out.println("paytmWalletResponse.json called by PAYTM");
+		System.out.println("PAYTM Response for Trnx");
 		Enumeration<String> paramNames = request.getParameterNames();
 		Map<String, String[]> mapData = request.getParameterMap();
 		TreeMap<String,String> parameters = new TreeMap<String,String>();
@@ -303,12 +311,14 @@ public class UserController {
 			}else{
 				parameters.put(paramName,mapData.get(paramName)[0]);
 			}
+			System.out.print("ParamName = "+paramName+" ParamValue = "+mapData.get(paramName)[0]);
 		}
 		//Inserting PAYTM response to database
 		try {
 			int x=userAPI.paytmWalletResponse(parameters);
+			System.out.println("PAYTM Rsponse inserted in paytm_txn_details table successfully");
 		} catch (Exception e1) {
-			// TODO Auto-generated catch block
+			System.out.println("PAYTM Rsponse NOT inserted in paytm_txn_details table successfully");
 			e1.printStackTrace();
 		}
 
@@ -316,28 +326,36 @@ public class UserController {
 		String outputHTML="";
 		try{
 			isValideChecksum = CheckSumServiceHelper.getCheckSumServiceHelper().verifycheckSum(PaytmConstants.MERCHANT_KEY,parameters,paytmChecksum);
+			System.out.println("Validation of checksum is :"+isValideChecksum);
 			 RequestDispatcher rd=null; 
 			if(isValideChecksum && parameters.containsKey("RESPCODE")){
 				if(parameters.get("RESPCODE").equals("01")){
 					outputHTML = parameters.toString();
-					rd=request.getRequestDispatcher("/jsp/o_confirm.jsp");
+					try {
+						System.out.println("Processed Order Id by PAYTM="+parameters.get("ORDERID"));
+						sendMessage(parameters.get("ORDERID"));
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					rd=request.getRequestDispatcher("/jsp/o_confirm2.jsp");
 				}else if(parameters.get("RESPCODE").equals("141") ||
 						parameters.get("RESPCODE").equals("810") ||
 						parameters.get("RESPCODE").equals("8102")||
 						parameters.get("RESPCODE").equals("8103")){
-					outputHTML="<b>Payment Failed.</b>";
+					System.out.println("Processed Order Id by PAYTM="+parameters.get("ORDERID"));
 					cancelOrder(parameters.get("ORDERID"));
 					rd=request.getRequestDispatcher("/jsp/payment.jsp");
 				}else if(parameters.get("RESPCODE").equals("227")){
-					outputHTML="<b>Payment Failed.</b>";
+					System.out.println("Processed Order Id by PAYTM="+parameters.get("ORDERID"));
 					cancelOrder(parameters.get("ORDERID"));
 					rd=request.getRequestDispatcher("/jsp/payment.jsp");
 				}else{
+					System.out.println("Processed Order Id by PAYTM="+parameters.get("ORDERID"));
 					cancelOrder(parameters.get("ORDERID"));
 					rd=request.getRequestDispatcher("/jsp/payment.jsp");
 				}
 			}else{
-				outputHTML="<b>Checksum mismatched.</b>";
+				System.out.println("Processed Order Id by PAYTM="+parameters.get("ORDERID"));
 				cancelOrder(parameters.get("ORDERID"));
 				rd=request.getRequestDispatcher("/jsp/error.jsp");
 			}
@@ -388,6 +406,11 @@ public class UserController {
 			}
 			System.out.println(paramName+"===>"+mapData.get(paramName)[0]);
 		}
+		try {
+			cancelOrder(parameters.get("txnid"));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		 RequestDispatcher rd=null;
 		rd=request.getRequestDispatcher("/jsp/payment.jsp");
 	}
@@ -410,8 +433,27 @@ public class UserController {
 			}
 			System.out.println(paramName+"===>"+mapData.get(paramName)[0]);
 		}
+		try {
+			cancelOrder(parameters.get("txnid"));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		 RequestDispatcher rd=null;
 		 rd=request.getRequestDispatcher("/jsp/payment.jsp");
 
+	}
+	
+	@GET
+	@Path("/allMenuDetail.json")
+    @Produces("application/json")
+	public List<Menu> allMenuDetail(){
+		return userAPI.allMenuDetail();
+	}
+	
+	@GET
+	@Path("/menu.json")
+    @Produces("application/json")
+	public List<Menu> menu(){
+		return userAPI.menu();
 	}
 }

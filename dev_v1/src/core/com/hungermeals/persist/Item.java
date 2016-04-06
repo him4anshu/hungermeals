@@ -11,7 +11,10 @@ public class Item/* implements Serializable*/{
 	private int numberOfItems;
 	private float perItemCost;
 	private String description;
-
+	private String imagePath;
+	private int menuId;
+	private int displayOrder;
+	private String status;
 	public int getItemId() {
 		return itemId;
 	}
@@ -42,6 +45,31 @@ public class Item/* implements Serializable*/{
 	public void setDescription(String description) {
 		this.description = description;
 	}
+	public String getImagePath() {
+		return imagePath;
+	}
+	public void setImagePath(String imagePath) {
+		this.imagePath = imagePath;
+	}
+	public int getMenuId() {
+		return menuId;
+	}
+	public void setMenuId(int menuId) {
+		this.menuId = menuId;
+	}
+	public int getDisplayOrder() {
+		return displayOrder;
+	}
+	public void setDisplayOrder(int displayOrder) {
+		this.displayOrder = displayOrder;
+	}
+	public String getStatus() {
+		return status;
+	}
+	public void setStatus(String status) {
+		this.status = status;
+	}
+	
 	
 	
 }

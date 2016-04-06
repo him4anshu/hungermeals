@@ -67,8 +67,8 @@ public class TemplateProcessing {
 						parameterType=tl.getParameterType();
 						
 						/*Replacing $,{,} from link parameter so that it can fit for template processing
-						 * We have added these three $,{,} to avoid the confusion in front end 
-						 * */
+						We have added these three $,{,} to avoid the confusion in front end */
+						  
 						linkPara=tl.getLinkParameter().replace("$", "");
 						linkPara=linkPara.replace("{", "");
 						linkPara=linkPara.replace("}", "");

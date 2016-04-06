@@ -9,6 +9,13 @@ public class PayuConstant {
 	public final static String CALLBACK_FAILURE_URL="http://hungermeals.com/services/userservices/payumWalletFailureResponse.json"; 
 	public final static String CALLBACK_CANCEL_URL="http://hungermeals.com/services/userservices/payumWalletCancelResponse.json"; 
 	public final static String SERVICE_PROVIDER="payu_paisa";
-
-
+	
+	/*public final static String MERCHANT_KEY="JBZaLc";
+	public final static String SALT="GQs7yium";
+	public final static String PAYU_URL="https://test.payu.in";
+	public final static String CALLBACK_SUCCESS_URL="http://localhost/services/userservices/payumWalletSuccessResponse.json"; 
+	public final static String CALLBACK_FAILURE_URL="http://localhost/services/userservices/payumWalletFailureResponse.json"; 
+	public final static String CALLBACK_CANCEL_URL="http://localhost/services/userservices/payumWalletCancelResponse.json"; 
+	public final static String SERVICE_PROVIDER="payu_paisa";*/
+	
 }

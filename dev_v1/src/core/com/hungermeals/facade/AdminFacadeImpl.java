@@ -10,6 +10,7 @@ import com.hungermeals.common.ConfigReader;
 import com.hungermeals.common.SMSThirdPartyService;
 import com.hungermeals.dao.AdminDAO;
 import com.hungermeals.persist.Item;
+import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.OrderDetails;
 import com.hungermeals.persist.OrderStatus;
 import com.hungermeals.persist.PlanSubscription;
@@ -81,6 +82,41 @@ public class AdminFacadeImpl implements AdminFacade{
 	@Override
 	public List<PlanSubscription> comboDetailsByUser(User user) {
 		return adminDAO.comboDetailsByUser(user);
+
+	}
+	@Override
+	public Menu addMenuDetails(Menu menu) {
+		return adminDAO.addMenuDetails(menu);
+
+	}
+	@Override
+	public Menu addItemDetails(Menu menu) {
+		return adminDAO.addItemDetails(menu);
+
+	}
+	@Override
+	public Menu updateMenuDetails(Menu menu) {
+		return adminDAO.updateMenuDetails(menu);
+
+	}
+	@Override
+	public Menu updateItemDetails(Menu menu) {
+		return adminDAO.updateItemDetails(menu);
+
+	}
+	@Override
+	public Menu deleteItem(String itemId) {
+		return adminDAO.deleteItem(itemId);
+
+	}
+	@Override
+	public Menu deleteMenu(String menuId) {
+		return adminDAO.deleteMenu(menuId);
+
+	}
+	@Override
+	public Menu alterMenu(Menu menu) {
+		return adminDAO.alterMenu(menu);
 
 	}
 

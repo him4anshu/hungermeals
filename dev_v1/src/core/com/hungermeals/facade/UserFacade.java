@@ -63,4 +63,12 @@ public interface UserFacade {
 
 	int paytmWalletResponse(TreeMap<String, String> parameters);
 
+	boolean sendMessage(String orderId);
+
+	boolean sendEmail(String orderId);
+
+	List<Menu> allMenuDetail();
+
+	List<Menu> menu();
+
 }

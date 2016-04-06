@@ -9,7 +9,11 @@ public class Menu/* implements Serializable*/{
 	private long menuId;
 	private String name;
 	private String description;
+	private int displayOrder;
 	private List<Item> itemList;
+	private ResponseStatus responseStatus;
+	private String operationType;
+	private String status;
 	public long getMenuId() {
 		return menuId;
 	}
@@ -34,6 +38,33 @@ public class Menu/* implements Serializable*/{
 	public void setItemList(List<Item> itemList) {
 		this.itemList = itemList;
 	}
+	
+	public int getDisplayOrder() {
+		return displayOrder;
+	}
+	public void setDisplayOrder(int displayOrder) {
+		this.displayOrder = displayOrder;
+	}
+	
+	public ResponseStatus getResponseStatus() {
+		return responseStatus;
+	}
+	public void setResponseStatus(ResponseStatus responseStatus) {
+		this.responseStatus = responseStatus;
+	}
+	public String getOperationType() {
+		return operationType;
+	}
+	public void setOperationType(String operationType) {
+		this.operationType = operationType;
+	}
+	
+	public String getStatus() {
+		return status;
+	}
+	public void setStatus(String status) {
+		this.status = status;
+	}
 	@Override
 	public int hashCode() {
 		int hashcode = 0;
@@ -51,4 +82,6 @@ public class Menu/* implements Serializable*/{
 	            return false;
 	        }
 	}
+
+	
 }

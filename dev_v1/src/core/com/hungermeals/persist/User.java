@@ -31,6 +31,7 @@ public class User {
 	private String mobileVerificationCode;
 	private boolean mobileVerified;
 	private boolean emailVerified;
+	private double totalAmount;
 	public long getUserId() {
 		return userId;
 	}
@@ -197,6 +198,14 @@ public class User {
 
 	public void setFirstName(String firstName) {
 		this.firstName = firstName;
+	}
+
+	public double getTotalAmount() {
+		return totalAmount;
+	}
+
+	public void setTotalAmount(double totalAmount) {
+		this.totalAmount = totalAmount;
 	}	
 	
 	

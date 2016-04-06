@@ -198,10 +198,10 @@ public class UserFacadeImpl implements UserFacade{
 			SMSThirdPartyService sms=new SMSThirdPartyService();
 			String phone=planSubscription.getMobile();
 			Map<String,String> orderDependentParameters=new HashMap<String, String>();
-			orderDependentParameters.put("F1", "");
-			orderDependentParameters.put("F2", "");
+			//orderDependentParameters.put("F1", "");
+			//orderDependentParameters.put("F2", "");
 			//orderDependentParameters.put("F3", orderStatus.getExecutiveName()+" (+91 "+orderStatus.getExecutivePhone()+" )");	
-			orderDependentParameters.put("F3", "");
+			//orderDependentParameters.put("F3", "");
 			try {
 				sms.sendOrderConfermation(new Long(phone), new Long(templateId), orderDependentParameters);
 			} catch (NumberFormatException e) {
@@ -222,10 +222,10 @@ public class UserFacadeImpl implements UserFacade{
 			SMSThirdPartyService sms=new SMSThirdPartyService();
 			String phone=planSubscription.getMobile();
 			Map<String,String> orderDependentParameters=new HashMap<String, String>();
-			orderDependentParameters.put("F1", "");
-			orderDependentParameters.put("F2", "");
+			//orderDependentParameters.put("F1", "");
+			//orderDependentParameters.put("F2", "");
 			//orderDependentParameters.put("F3", orderStatus.getExecutiveName()+" (+91 "+orderStatus.getExecutivePhone()+" )");	
-			orderDependentParameters.put("F3", "");
+			//orderDependentParameters.put("F3", "");
 			try {
 				sms.sendOrderConfermation(new Long(phone), new Long(templateId), orderDependentParameters);
 			} catch (NumberFormatException e) {
@@ -246,10 +246,10 @@ public class UserFacadeImpl implements UserFacade{
 			SMSThirdPartyService sms=new SMSThirdPartyService();
 			String phone=planSubscription.getMobile();
 			Map<String,String> orderDependentParameters=new HashMap<String, String>();
-			orderDependentParameters.put("F1", "");
-			orderDependentParameters.put("F2", "");
+			//orderDependentParameters.put("F1", "");
+			//orderDependentParameters.put("F2", "");
 			//orderDependentParameters.put("F3", orderStatus.getExecutiveName()+" (+91 "+orderStatus.getExecutivePhone()+" )");	
-			orderDependentParameters.put("F3", "");
+			//orderDependentParameters.put("F3", "");
 			try {
 				sms.sendOrderConfermation(new Long(phone), new Long(templateId), orderDependentParameters);
 			} catch (NumberFormatException e) {
@@ -326,6 +326,59 @@ public class UserFacadeImpl implements UserFacade{
 	@Override
 	public int paytmWalletResponse(TreeMap<String, String> parameters) {
 		return userDAO.paytmWalletResponse(parameters);
+
+	}
+	@Override
+	public boolean sendMessage(String orderId) {
+
+		String templateId=configReader.getValue("sms.orderplaced4customer");
+		SMSThirdPartyService sms=new SMSThirdPartyService();
+		User user=userDAO.getCustomerByOrder(orderId);
+		Map<String,String> orderDependentParameters=new HashMap<String, String>();
+		orderDependentParameters.put("F1", orderId);
+		orderDependentParameters.put("F2", user.getTotalAmount()+"");
+		//orderDependentParameters.put("F3", orderStatus.getExecutiveName()+" (+91 "+orderStatus.getExecutivePhone()+" )");	
+		orderDependentParameters.put("F3", "");
+		try {
+			sms.sendOrderConfermation(new Long(user.getMobile()), new Long(templateId), orderDependentParameters);
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		/*For Admin*/
+		String templateId1=configReader.getValue("sms.orderplaced4admin");
+		Map<String,String> orderDependentParameters1=new HashMap<String, String>();
+		orderDependentParameters1.put("F1", orderId);
+		orderDependentParameters1.put("F2", user.getTotalAmount()+"");
+		orderDependentParameters1.put("F3", "");
+		orderDependentParameters1.put("F4", "-"+user.getMobile());
+		String adminPhone=configReader.getValue("admin.phone");
+		try {
+			sms.sendOrderConfermation(new Long(adminPhone), new Long(templateId1), orderDependentParameters1);
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	
+		return userDAO.sendMessage(orderId);
+
+	}
+	@Override
+	public boolean sendEmail(String orderId) {
+		return userDAO.sendEmail(orderId);
+
+	}
+	@Override
+	public List<Menu> allMenuDetail() {
+		return userDAO.allMenuDetail();
+
+	}
+	@Override
+	public List<Menu> menu() {
+		return userDAO.menu();
 
 	}
 	

@@ -252,17 +252,10 @@ public class NLCPCXFFilter implements Filter {
 		        }
 			   
 		  
-			   /*Newly added for setting header in json*/  
-	            response.addHeader("Access-Control-Allow-Origin", "*");
-		        response.addHeader("Access-Control-Allow-Headers", "Content-Type");
-		        response.addHeader("Access-Control-Allow-Methods", "GET,POST");
-		        response.addHeader("Access-Control-Max-Age", "86400");
-				System.out.println("REQUEST DETAILS::::::::::\nGet Method:"+request.getMethod()+"\nRemote Addr"+request.getRemoteAddr() +"\nRemote Host"+request.getRemoteHost() +"\nremote Port"+request.getRemotePort() +"\nRemote User"+request.getRemoteUser() +"\nClass"+request.getClass() +"\n");
-				
-				chain.doFilter(request, response);
-				operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
-		   
-				for (Method method : operatingSystemMXBean.getClass().getDeclaredMethods()) {
+			   System.out.println("REQUEST DETAILS::::::::::\nGet Method:"+request.getMethod()+"\nRemote Addr"+request.getRemoteAddr() +"\nRemote Host"+request.getRemoteHost() +"\nremote Port"+request.getRemotePort() +"\nRemote User"+request.getRemoteUser() +"\nClass"+request.getClass() +"\n");
+			chain.doFilter(request, response);
+		   operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
+		   for (Method method : operatingSystemMXBean.getClass().getDeclaredMethods()) {
 	            method.setAccessible(true);
 	            if (method.getName().startsWith("get") && Modifier.isPublic(method.getModifiers())) {
 	                Object value;
@@ -320,5 +313,4 @@ public class NLCPCXFFilter implements Filter {
 		
 	}	
 	
-
 }

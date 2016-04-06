@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.hungermeals.api.AdminAPI;
 import com.hungermeals.persist.Item;
+import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.OrderDetails;
 import com.hungermeals.persist.PlanSubscription;
 import com.hungermeals.persist.User;
@@ -65,5 +66,54 @@ public class AdminController {
     @Produces("application/json")
 	public List<PlanSubscription> comboDetails(User user){
 		return adminAPI.comboDetailsByUser(user);
+	}
+	
+	@POST
+	@Path("/addMenuDetails.json")
+    @Produces("application/json")
+	public Menu addMenuDetails(Menu menu){
+		return adminAPI.addMenuDetails(menu);
+	}
+	
+	@POST
+	@Path("/addItemDetails.json")
+    @Produces("application/json")
+	public Menu addItemDetails(Menu menu){
+		return adminAPI.addItemDetails(menu);
+	}
+	
+	@POST
+	@Path("/updateMenuDetails.json")
+    @Produces("application/json")
+	public Menu updateMenuDetails(Menu menu){
+		return adminAPI.updateMenuDetails(menu);
+	}
+	
+	@POST
+	@Path("/updateItemDetails.json")
+    @Produces("application/json")
+	public Menu updateItemDetails(Menu menu){
+		return adminAPI.updateItemDetails(menu);
+	}
+	
+	@GET
+	@Path("/deleteItem.json/{itemId}")
+    @Produces("application/json")
+	public Menu deleteItem(@PathParam("itemId") String itemId){
+		return adminAPI.deleteItem(itemId);
+	}
+	
+	@GET
+	@Path("/deleteMenu.json/{menuId}")
+    @Produces("application/json")
+	public Menu deleteMenu(@PathParam("menuId") String menuId){
+		return adminAPI.deleteMenu(menuId);
+	}
+	
+	@POST
+	@Path("/alterMenu.json")
+    @Produces("application/json")
+	public Menu alterMenu(Menu menu){
+		return adminAPI.alterMenu(menu);
 	}
 }

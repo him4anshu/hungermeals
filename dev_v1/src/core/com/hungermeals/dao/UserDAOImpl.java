@@ -420,7 +420,7 @@ public class UserDAOImpl implements UserDAO{
 		final Map<Menu, List<Item>> menuMapList=new HashMap<Menu, List<Item>>();
 		final Menu menu=new Menu();
 		MapSqlParameterSource mapSqlParameterSourceAddress = new MapSqlParameterSource();
-		String addressListQuery = "SELECT M.MENU_ID AS M_ID,NAME AS MENU_NAME,M.DESCRIPTION AS MENU_DESCRIPTION,ITEM_ID,ITEM_NAME,"
+		String addressListQuery = "SELECT I.STATUS,I.IMAGE_FILE_NAME,M.DISPLAY_ORDER AS MENU_DISPLAY_ORDER,I.DISPLAY_ORDER AS ITEM_DISPLAY_ORDER,M.MENU_ID AS M_ID,NAME AS MENU_NAME,M.DESCRIPTION AS MENU_DESCRIPTION,ITEM_ID,ITEM_NAME,"
 				+ " ITEM_PRICE,I.DESCRIPTION AS ITEM_DESCRIPTION FROM menu M"
 				+"  JOIN item I ON M.MENU_ID=I.MENU_ID AND M.STATUS='A' AND I.STATUS='A';";
 		namedParameterJdbcTemplate.query(addressListQuery,mapSqlParameterSourceAddress, new RowMapper() {
@@ -432,6 +432,7 @@ public class UserDAOImpl implements UserDAO{
 						menu.setMenuId(rs.getLong("M_ID"));
 						menu.setName(rs.getString("MENU_NAME"));
 						menu.setDescription(rs.getString("MENU_DESCRIPTION"));
+						menu.setDisplayOrder(rs.getInt("MENU_DISPLAY_ORDER"));
 						
 						/*Item Details*/
 						Item item=new Item();
@@ -439,6 +440,13 @@ public class UserDAOImpl implements UserDAO{
 						item.setItemName(rs.getString("ITEM_NAME"));
 						item.setPerItemCost(rs.getInt("ITEM_PRICE"));
 						item.setDescription(rs.getString("ITEM_DESCRIPTION"));
+						item.setDisplayOrder(rs.getInt("ITEM_DISPLAY_ORDER"));
+						try {
+							item.setImagePath(configReader.getValue("menu.imagelocation")+rs.getString("IMAGE_FILE_NAME"));
+						} catch (Exception e) {
+							e.printStackTrace();
+							item.setImagePath("image file not found");
+						}
 						
 						if(menuMapList.containsKey(menu)){							
 							List<Item> itemList=menuMapList.get(menu);
@@ -457,7 +465,6 @@ public class UserDAOImpl implements UserDAO{
 		 Iterator it = menuMapList.entrySet().iterator();
 		    while (it.hasNext()) {
 		        Map.Entry pair = (Map.Entry)it.next();
-		        System.out.println(pair.getKey() + " = " + pair.getValue());
 		        Menu m=(Menu)pair.getKey();
 		        m.setItemList((List<Item>)pair.getValue());
 		        menuList.add(m);
@@ -647,7 +654,7 @@ public class UserDAOImpl implements UserDAO{
 		
 		/*Getting user dependent details*/
 		//userID="123";flag="1";
-		List<UserBean> userBean=userListDetails(mailingDetails.getUcode(),"12");
+		List<UserBean> userBean=userListDetails(mailingDetails.getUcode(),"1");
 		
 		/*Getting template links details*/
 		List<MailerBean> templateDetails=getTemplateLinkDetails(mailingDetails.getTemplateId());
@@ -729,7 +736,7 @@ public class UserDAOImpl implements UserDAO{
 		
 		/*Fetching required query for getting dynamic details in template*/
 		MailerBean filterObject=new MailerBean();
-		String fetchingQuery="SELECT QUERY FROM mail_template.QUERY_DETAILS WHERE QUERY_ID="+flag;
+		String fetchingQuery="SELECT QUERY FROM query_details WHERE QUERY_ID="+flag;
 		filterObject=(MailerBean) namedParameterJdbcTemplate.queryForObject(fetchingQuery, new HashMap(), new RowMapper() {
 			@Override
 			public Object mapRow(ResultSet rs, int arg1)
@@ -740,16 +747,16 @@ public class UserDAOImpl implements UserDAO{
 			}
 		});			
 		String requiredQuery=filterObject.getFilterConditions();
-		String GPN_ID="GPN_ID";
+		String HM_ID="HM_ID";
 		String IdList[]=userID.split("@");
 		for (int i =1; i < IdList.length+1; i++) {
-			GPN_ID=GPN_ID+"_"+i;
-			String temp=GPN_ID;
-			System.out.println("creating GPN_ID="+GPN_ID);
-			GPN_ID=IdList[i-1];
-			System.out.println("Final GPN_ID="+GPN_ID);
-			if(requiredQuery.contains("${GPN_ID_"+i+"}")){
-				requiredQuery=requiredQuery.replace("${GPN_ID_"+i+"}",GPN_ID);
+			HM_ID=HM_ID+"_"+i;
+			String temp=HM_ID;
+			System.out.println("creating HM_ID="+HM_ID);
+			HM_ID=IdList[i-1];
+			System.out.println("Final GPN_ID="+HM_ID);
+			if(requiredQuery.contains("${HM_ID_"+i+"}")){
+				requiredQuery=requiredQuery.replace("${HM_ID_"+i+"}",HM_ID);
 			}
 			/*if(requiredQuery.contains("${GPN_ID_1}") && i==1){
 				requiredQuery=requiredQuery.replace("${GPN_ID_1}",GPN_ID);
@@ -762,11 +769,11 @@ public class UserDAOImpl implements UserDAO{
 		System.out.println("User information select query-: "+requiredQuery);
 		userListDetail=userListDetails(requiredQuery);
 		
-		List<UserBean> newUserListDetail=new ArrayList<UserBean>();
+		/*List<UserBean> newUserListDetail=new ArrayList<UserBean>();
 		
-		/*Inserting user details into other table for tracking purpose*/
-		for (UserBean userDetail : userListDetail) {}
-		return newUserListDetail;
+		Inserting user details into other table for tracking purpose
+		for (UserBean userDetail : userListDetail) {}*/
+		return userListDetail;
 	
 	}
 	public List<UserBean> userListDetails(String query) {
@@ -1318,4 +1325,132 @@ public class UserDAOImpl implements UserDAO{
 		}
 		return addId;
 	}
+
+	@Override
+	public boolean sendMessage(String orderId) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean sendEmail(String orderId) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public User getCustomerByOrder(String orderId) {
+		User user=new User();
+		MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
+		String userIdQuery = "SELECT U.USER_ID,U.EMAIL,U.PHONE,O.TOTAL_AMOUNT,U.FIRST_NAME FROM user U join order_details O on U.user_id=O.user_id where O.order_id="+orderId;
+		try {
+			user=(User) namedParameterJdbcTemplate.queryForObject(userIdQuery,mapSqlParameterSource, new RowMapper(){
+				@Override
+				public Object mapRow(ResultSet rs, int arg1)
+						throws SQLException {
+					User user = new User();
+					user.setUserId(rs.getInt("USER_ID"));
+					user.setUserStatus(true);
+					user.setLogTime(new Date());
+					user.setuName(rs.getString("EMAIL"));
+					user.setMobile(rs.getString("PHONE"));
+					user.setFirstName(rs.getString("FIRST_NAME"));
+					user.setTotalAmount(rs.getDouble("TOTAL_AMOUNT"));
+					return user;
+				}
+			});
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+		}
+		return user;
+	}
+
+@Override
+public List<Menu> allMenuDetail() {
+	List<Menu> menuList=new ArrayList<Menu>();
+	final List<Item> itemList=new ArrayList<Item>();
+	final Map<Menu, List<Item>> menuMapList=new HashMap<Menu, List<Item>>();
+	final Menu menu=new Menu();
+	MapSqlParameterSource mapSqlParameterSourceAddress = new MapSqlParameterSource();
+	String addressListQuery = "SELECT I.STATUS,I.IMAGE_FILE_NAME,M.DISPLAY_ORDER AS MENU_DISPLAY_ORDER,I.DISPLAY_ORDER AS ITEM_DISPLAY_ORDER,M.MENU_ID AS M_ID,NAME AS MENU_NAME,M.DESCRIPTION AS MENU_DESCRIPTION,ITEM_ID,ITEM_NAME,"
+			+ " ITEM_PRICE,I.DESCRIPTION AS ITEM_DESCRIPTION FROM menu M"
+			+"  JOIN item I ON M.MENU_ID=I.MENU_ID ";
+	namedParameterJdbcTemplate.query(addressListQuery,mapSqlParameterSourceAddress, new RowMapper() {
+				@Override
+				public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
+					
+					/*Menu Details*/
+					Menu menu =new Menu();
+					menu.setMenuId(rs.getLong("M_ID"));
+					menu.setName(rs.getString("MENU_NAME"));
+					menu.setDescription(rs.getString("MENU_DESCRIPTION"));
+					menu.setDisplayOrder(rs.getInt("MENU_DISPLAY_ORDER"));
+					
+					/*Item Details*/
+					Item item=new Item();
+					item.setItemId(rs.getInt("ITEM_ID"));
+					item.setItemName(rs.getString("ITEM_NAME"));
+					item.setPerItemCost(rs.getInt("ITEM_PRICE"));
+					item.setDescription(rs.getString("ITEM_DESCRIPTION"));
+					item.setDisplayOrder(rs.getInt("ITEM_DISPLAY_ORDER"));
+					item.setStatus(rs.getString("STATUS"));
+					try {
+						item.setImagePath(configReader.getValue("menu.imagelocation")+rs.getString("IMAGE_FILE_NAME"));
+					} catch (Exception e) {
+						item.setImagePath("image file not found");
+						e.printStackTrace();
+					}
+					
+					if(menuMapList.containsKey(menu)){							
+						List<Item> itemList=menuMapList.get(menu);
+						itemList.add(item);
+						menuMapList.put(menu, itemList);
+					}else{							
+						List<Item> itemList=new ArrayList<Item>();
+						itemList.add(item);
+						menuMapList.put(menu, itemList);
+					}
+					
+					return menu;
+		}
+	});
+	
+	 Iterator it = menuMapList.entrySet().iterator();
+	    while (it.hasNext()) {
+	        Map.Entry pair = (Map.Entry)it.next();
+	        Menu m=(Menu)pair.getKey();
+	        m.setItemList((List<Item>)pair.getValue());
+	        menuList.add(m);
+
+	    }		
+	return menuList;
+}
+
+@Override
+public List<Menu> menu() {
+
+	List<Menu> menuList=new ArrayList<Menu>();
+	final List<Item> itemList=new ArrayList<Item>();
+	final Map<Menu, List<Item>> menuMapList=new HashMap<Menu, List<Item>>();
+	final Menu menu=new Menu();
+	MapSqlParameterSource mapSqlParameterSourceAddress = new MapSqlParameterSource();
+	String addressListQuery = "SELECT M.STATUS,M.DISPLAY_ORDER AS MENU_DISPLAY_ORDER,M.MENU_ID AS M_ID,NAME AS MENU_NAME,M.DESCRIPTION AS MENU_DESCRIPTION"
+			+ " FROM menu M";
+	menuList=namedParameterJdbcTemplate.query(addressListQuery,mapSqlParameterSourceAddress, new RowMapper() {
+				@Override
+				public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
+					
+					/*Menu Details*/
+					Menu menu =new Menu();
+					menu.setMenuId(rs.getLong("M_ID"));
+					menu.setName(rs.getString("MENU_NAME"));
+					menu.setDescription(rs.getString("MENU_DESCRIPTION"));
+					menu.setDisplayOrder(rs.getInt("MENU_DISPLAY_ORDER"));
+					menu.setStatus(rs.getString("STATUS"));
+					return menu;
+		}
+	});	
+	return menuList;
+}
+
 }

@@ -64,4 +64,14 @@ public interface UserDAO {
 
 	int paytmWalletResponse(TreeMap<String, String> parameters);
 
+	boolean sendMessage(String orderId);
+
+	boolean sendEmail(String orderId);
+
+	User getCustomerByOrder(String orderId);
+
+	List<Menu> allMenuDetail();
+
+	List<Menu> menu();
+
 }

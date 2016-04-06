@@ -156,6 +156,29 @@ public class UserAPIImpl implements UserAPI{
 		
 	}
 
+	@Override
+	public boolean sendMessage(String orderId) {
+		return userFacade.sendMessage(orderId);
+
+	}
+
+	@Override
+	public boolean sendEmail(String orderId) {
+		return userFacade.sendEmail(orderId);
+
+	}
+
+	@Override
+	public List<Menu> allMenuDetail() {
+		return userFacade.allMenuDetail();
+
+	}
+
+	@Override
+	public List<Menu> menu() {
+		return userFacade.menu();
+	}
+
 
 	
 
