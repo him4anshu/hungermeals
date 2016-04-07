@@ -43,7 +43,7 @@
           target: createTestCasesJar                      
          - - - - - - - - - - - - - - - - - -->
     <target name="createTestCasesJar">
-        <jar destfile="${deploy}/fidloo_test_cases.jar"
+        <jar destfile="${deploy}/hungermeals_test_cases.jar"
              basedir="${classes.test}">
             <fileset dir="${testSrc}">
                 <include name="com/mailer/gpn/config/gpn-test-spring-config.xml"/>

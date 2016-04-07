@@ -109,12 +109,15 @@
 		<property name="password" value="${smtp.password}" />
 		<property name="javaMailProperties">
 		<props>
-		<prop key="mail.smtp.auth">true</prop>
+		<prop key="mail.smtp.auth">${smtp.auth}</prop>
+		<prop key="mail.smtp.protocol">${smtp.protocol}</prop>
+		<prop key="mail.smtp.socketFactory.class">${smtp.socketFactory.class}</prop>
+		<prop key="mail.smtp.socketFactory.fallback">${smtp.socketFactory.fallback}</prop>
+		<prop key="mail.smtp.socketFactory.port">${smtp.socketFactory.port}</prop>
+		<prop key="mail.smtp.startssl.enable">${smtp.startssl.enable}</prop>
 		</props>
 		</property>
 	</bean>	
-	
-	
 	<jaxrs:server id="userservice" address="/userservices">
 		<jaxrs:serviceBeans>
 			<ref bean="userController" />

@@ -33,13 +33,13 @@
           target: createWar
          - - - - - - - - - - - - - - - - - -->
     <target name="createWar" depends="createConfig">
-        <war destfile="${deploy}/hungermeals.war" webxml="${warSrc}/web/WEB-INF/web.xml">
+        <war destfile="${deploy}/fidloo.war" webxml="${warSrc}/web/WEB-INF/web.xml">
             <lib dir="${lib}">
                 <exclude name="junit-4.4.jar" />
                 <exclude name="mysql-connector-java-5.0.4-bin.jar" />
             </lib>
             <lib dir="${deploy}">
-                <include name="hungermeals_core.jar" />
+                <include name="fidloo_core.jar" />
             </lib>
             <classes dir="${classes.war}">
                 <include name="**/*.class" />
@@ -58,7 +58,6 @@
             <zipfileset dir="${warSrc}/web/WEB-INF" prefix="WEB-INF">
                 <include name="applicationContext.xml" />
                 <include name="jboss-web.xml" />
-            	<include name="urlrewrite.xml" />
             </zipfileset>
         </war>
     	
@@ -82,7 +81,7 @@
           target: createExplodedWar                      
          - - - - - - - - - - - - - - - - - -->
     <target name="createExplodedWar">
-        <unwar src="${deploy}/hungermeals.war" dest="${exploded}/hungermeals.war">
+        <unwar src="${deploy}/fidloo.war" dest="${exploded}/fidloo.war">
         </unwar>
     </target>
 	
