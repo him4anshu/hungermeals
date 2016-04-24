@@ -179,6 +179,11 @@ public class UserAPIImpl implements UserAPI{
 		return userFacade.menu();
 	}
 
+	@Override
+	public int payuWalletResponse(TreeMap<String, String> parameters) {
+		return userFacade.payuWalletResponse(parameters);
+	}
+
 
 	
 

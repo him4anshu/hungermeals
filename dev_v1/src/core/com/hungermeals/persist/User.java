@@ -32,6 +32,9 @@ public class User {
 	private boolean mobileVerified;
 	private boolean emailVerified;
 	private double totalAmount;
+	private String mailsendStatus;
+	private String temp1;
+	private String temp2;
 	public long getUserId() {
 		return userId;
 	}
@@ -206,6 +209,30 @@ public class User {
 
 	public void setTotalAmount(double totalAmount) {
 		this.totalAmount = totalAmount;
+	}
+
+	public String getMailsendStatus() {
+		return mailsendStatus;
+	}
+
+	public void setMailsendStatus(String mailsendStatus) {
+		this.mailsendStatus = mailsendStatus;
+	}
+
+	public String getTemp1() {
+		return temp1;
+	}
+
+	public void setTemp1(String temp1) {
+		this.temp1 = temp1;
+	}
+
+	public String getTemp2() {
+		return temp2;
+	}
+
+	public void setTemp2(String temp2) {
+		this.temp2 = temp2;
 	}	
 	
 	

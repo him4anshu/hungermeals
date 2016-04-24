@@ -35,4 +35,7 @@ public interface AdminDAO {
 
 	Menu alterMenu(Menu menu);
 
+	List<OrderDetails> subscriptionList(String orderStatus);
+
+
 }

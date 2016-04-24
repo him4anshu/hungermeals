@@ -71,4 +71,6 @@ public interface UserFacade {
 
 	List<Menu> menu();
 
+	int payuWalletResponse(TreeMap<String, String> parameters);
+
 }

@@ -74,4 +74,6 @@ public interface UserDAO {
 
 	List<Menu> menu();
 
+	int payuWalletResponse(TreeMap<String, String> parameters);
+
 }

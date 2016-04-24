@@ -7,6 +7,7 @@ public class ComboDetails {
 	private String comboName;
 	private int comboId;
 	private int cost;
+	private PlanSubscription planSubscriptionDetails;
 
 	public String getComboName() {
 		return comboName;
@@ -31,4 +32,14 @@ public class ComboDetails {
 	public void setCost(int cost) {
 		this.cost = cost;
 	}
+
+	public PlanSubscription getPlanSubscriptionDetails() {
+		return planSubscriptionDetails;
+	}
+
+	public void setPlanSubscriptionDetails(PlanSubscription planSubscriptionDetails) {
+		this.planSubscriptionDetails = planSubscriptionDetails;
+	}
+	
+	
 }

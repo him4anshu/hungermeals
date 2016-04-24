@@ -81,4 +81,10 @@ public class AdminAPIImpl implements AdminAPI{
 
 	}
 
+	@Override
+	public List<OrderDetails> subscriptionList(String orderStatus) {
+		return adminFacade.subscriptionList(orderStatus);
+
+	}
+
 }

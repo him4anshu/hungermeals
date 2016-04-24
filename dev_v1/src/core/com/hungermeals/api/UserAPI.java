@@ -45,5 +45,6 @@ public interface UserAPI {
 	boolean sendEmail(String orderId);
 	List<Menu> allMenuDetail();
 	List<Menu> menu();
+	int payuWalletResponse(TreeMap<String, String> parameters);
 
 }

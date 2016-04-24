@@ -116,4 +116,11 @@ public class AdminController {
 	public Menu alterMenu(Menu menu){
 		return adminAPI.alterMenu(menu);
 	}
+	
+	@GET
+	@Path("/subscriptionList.json/{orderStatus}")
+    @Produces("application/json")
+	public List<OrderDetails> subscriptionList(@PathParam("orderStatus") String orderStatus){
+		return adminAPI.subscriptionList(orderStatus);
+	}
 }

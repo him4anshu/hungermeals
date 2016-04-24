@@ -11,7 +11,14 @@ public class OrderDetails {
 	private List<Item> itemList;
 	private Order orderInfo;
 	private OrderStatus orderStatus;
+	private ComboDetails comboDetails;
 	
+	public ComboDetails getComboDetails() {
+		return comboDetails;
+	}
+	public void setComboDetails(ComboDetails comboDetails) {
+		this.comboDetails = comboDetails;
+	}
 	public User getUser() {
 		return user;
 	}

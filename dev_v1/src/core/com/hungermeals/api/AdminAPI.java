@@ -32,4 +32,6 @@ public interface AdminAPI {
 
 	Menu alterMenu(Menu menu);
 
+	List<OrderDetails> subscriptionList(String orderStatus);
+
 }

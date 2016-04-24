@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.hungermeals.common.ConfigReader;
+import com.hungermeals.common.MailSender;
 import com.hungermeals.common.PaytmConstants;
 import com.hungermeals.common.PaytmService;
 import com.hungermeals.common.PayuService;
@@ -19,6 +20,7 @@ import com.hungermeals.dao.UserDAO;
 import com.hungermeals.persist.Address;
 import com.hungermeals.persist.ComboDetails;
 import com.hungermeals.persist.CouponTxn;
+import com.hungermeals.persist.MailerDTO;
 import com.hungermeals.persist.MailingDetails;
 import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.OrderDetails;
@@ -40,6 +42,9 @@ public class UserFacadeImpl implements UserFacade{
 	@Autowired
 	private ConfigReader configReader;
 	
+	@Autowired
+	private MailSender hungermealsMailSender;
+	
 	@Override
 	public User logedInUserProfile(User user) {
 		// TODO Auto-generated method stub
@@ -58,7 +63,24 @@ public class UserFacadeImpl implements UserFacade{
 		
 		String encEmail= StringEncrypterService.encryptString(user.getEmail());
 		user.setEncEmail(encEmail);
-		return userDAO.userRegistration(user);
+		User userR=userDAO.userRegistration(user);
+		System.out.println("###Sending welcome mail to user###"+userR.getResponseStatus().getResponseCode());
+		if(userR.getResponseStatus().getResponseCode().equals("HM200")){
+			MailerDTO mailerData=new MailerDTO();
+			mailerData.setTo(new String[]{user.getEmail()});
+			mailerData.setSubject(configReader.getValue("mail.welcomeUser.subject"));
+			mailerData.setFileName(configReader.getValue("mail.welcomeUser.templateName"));
+			Map<String, Object> dynamicData=new HashMap<String, Object>();
+			dynamicData.put("userName", userR.getFirstName());
+			mailerData.setDynamicData(dynamicData);
+			boolean sendStatus=hungermealsMailSender.sendMail(mailerData);
+			if(sendStatus)
+				userR.setMailsendStatus("SUCCESS");
+			else
+				userR.setMailsendStatus("FAILED");
+
+		}
+		return userR;
 	}
 	@Override
 	public User1 alreadyRegisteredCheck(String email) {
@@ -108,6 +130,26 @@ public class UserFacadeImpl implements UserFacade{
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			//Send Email
+			MailerDTO mailerData=new MailerDTO();
+			mailerData.setTo(new String[]{orderDetails.getUser().getEmail()});
+			mailerData.setSubject(configReader.getValue("mail.orderconfirm.subject"));
+			mailerData.setFileName(configReader.getValue("mail.orderconfirm.templateName"));
+			Map<String, Object> dynamicData=new HashMap<String, Object>();
+			dynamicData.put("orderNumber", orderStatus.getOrderId());
+			dynamicData.put("userName", orderDetails.getUser().getFirstName());
+			dynamicData.put("deliveryTime", orderDetails.getOrderInfo().getDeliverySlot());
+			dynamicData.put("totalAmount", orderDetails.getOrderInfo().getTotalAmount());
+			dynamicData.put("phone", orderDetails.getUser().getMobile());
+			dynamicData.put("line1BuildingNo", orderDetails.getUser().getAddress().getLine1BuildingNo());
+			dynamicData.put("line2StreetNo", orderDetails.getUser().getAddress().getLine2StreetNo());
+			dynamicData.put("city", orderDetails.getUser().getAddress().getCity());
+			dynamicData.put("pCode", orderDetails.getUser().getAddress().getpCode());
+			dynamicData.put("email", orderDetails.getUser().getEmail());
+			dynamicData.put("paymentMode", orderDetails.getOrderInfo().getPaymentMode());
+			mailerData.setDynamicData(dynamicData);
+			
+			boolean sendStatus=hungermealsMailSender.sendMail(mailerData);
 		}else if("Order placed".equals(orderStatus.getOrderStatusDesc() ) && orderDetails.getOrderInfo().getPaymentMode().equalsIgnoreCase("PAYTM")){
 			PaytmService paytmService = new PaytmService();
 			TreeMap<String,String> parameters=paytmService.paytmWalletRequestParameter(orderDetails,orderStatus);
@@ -363,6 +405,27 @@ public class UserFacadeImpl implements UserFacade{
 			e.printStackTrace();
 		}
 	
+			//Send Email
+			MailerDTO mailerData=new MailerDTO();
+			mailerData.setTo(new String[]{user.getEmail()});
+			mailerData.setSubject(configReader.getValue("mail.orderconfirm.subject"));
+			mailerData.setFileName(configReader.getValue("mail.orderconfirm.templateName"));
+			Map<String, Object> dynamicData=new HashMap<String, Object>();
+			dynamicData.put("orderNumber", orderId);
+			dynamicData.put("userName", user.getFirstName());
+			dynamicData.put("deliveryTime", user.getTemp2());
+			dynamicData.put("totalAmount", user.getTotalAmount());
+			dynamicData.put("phone", user.getMobile());
+			dynamicData.put("paymentMode", user.getTemp1());
+			dynamicData.put("line1BuildingNo", user.getAddress().getLine1BuildingNo());
+			dynamicData.put("line2StreetNo", user.getAddress().getLine2StreetNo());
+			dynamicData.put("city", user.getAddress().getCity());
+			dynamicData.put("pCode", user.getAddress().getpCode());
+			dynamicData.put("email", user.getEmail());
+			mailerData.setDynamicData(dynamicData);
+
+			boolean sendStatus=hungermealsMailSender.sendMail(mailerData);
+		
 		return userDAO.sendMessage(orderId);
 
 	}
@@ -379,6 +442,11 @@ public class UserFacadeImpl implements UserFacade{
 	@Override
 	public List<Menu> menu() {
 		return userDAO.menu();
+
+	}
+	@Override
+	public int payuWalletResponse(TreeMap<String, String> parameters) {
+		return userDAO.payuWalletResponse(parameters);
 
 	}
 	

@@ -119,5 +119,10 @@ public class AdminFacadeImpl implements AdminFacade{
 		return adminDAO.alterMenu(menu);
 
 	}
+	@Override
+	public List<OrderDetails> subscriptionList(String orderStatus) {
+		return adminDAO.subscriptionList(orderStatus);
+
+	}
 
 }

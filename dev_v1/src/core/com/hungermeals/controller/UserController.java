@@ -369,7 +369,7 @@ public class UserController {
 	@POST
 	@Path("/payumWalletSuccessResponse.json")
 	@Consumes("application/x-www-form-urlencoded")
-	public void payumWalletSuccessResponse(@Context HttpServletRequest request,@Context HttpServletResponse response){
+	public void payumWalletSuccessResponse(@Context HttpServletRequest request,@Context HttpServletResponse response) throws Exception{
 		System.out.println("payumWalletSuccessResponse.json called by PAYU");
 		Enumeration<String> paramNames = request.getParameterNames();
 		Map<String, String[]> mapData = request.getParameterMap();
@@ -384,8 +384,19 @@ public class UserController {
 			}
 			System.out.println(paramName+"===>"+mapData.get(paramName)[0]);
 		}
+		 sendMessage(parameters.get("txnid")); //txnid as orderId
+		//Inserting PAYTM response to database
+			try {
+				int x=userAPI.payuWalletResponse(parameters);
+				System.out.println("PAYU Rsponse inserted in paytm_txn_details table successfully");
+			} catch (Exception e1) {
+				System.out.println("PAYU Rsponse NOT inserted in paytm_txn_details table successfully");
+				e1.printStackTrace();
+			}
+		 
 		 RequestDispatcher rd=null; 
-		 rd=request.getRequestDispatcher("/jsp/o_confirm.jsp");
+		 rd=request.getRequestDispatcher("/jsp/o_confirm2.jsp");
+		 rd.forward(request, response);
 	}
 	
 	@POST
@@ -407,12 +418,22 @@ public class UserController {
 			System.out.println(paramName+"===>"+mapData.get(paramName)[0]);
 		}
 		try {
-			cancelOrder(parameters.get("txnid"));
-		} catch (Exception e) {
+			RequestDispatcher rd=null;
+			rd=request.getRequestDispatcher("/jsp/payment.jsp");
+			System.out.println("OrderId=====>"+parameters.get("txnid"));
+			cancelOrder(parameters.get("txnid")); //txnid as orderId
+			try {
+				int x=userAPI.payuWalletResponse(parameters);
+				System.out.println("PAYU Rsponse inserted in paytm_txn_details table successfully");
+			} catch (Exception e1) {
+				System.out.println("PAYU Rsponse NOT inserted in paytm_txn_details table successfully");
+				e1.printStackTrace();
+			}
+			rd.forward(request, response);		
+			} catch (Exception e) {
 			e.printStackTrace();
 		}
-		 RequestDispatcher rd=null;
-		rd=request.getRequestDispatcher("/jsp/payment.jsp");
+		 
 	}
 	
 	@POST
@@ -434,12 +455,21 @@ public class UserController {
 			System.out.println(paramName+"===>"+mapData.get(paramName)[0]);
 		}
 		try {
-			cancelOrder(parameters.get("txnid"));
-		} catch (Exception e) {
+			RequestDispatcher rd=null;
+			rd=request.getRequestDispatcher("/jsp/payment.jsp");
+			System.out.println("OrderId=====>"+parameters.get("txnid"));
+			cancelOrder(parameters.get("txnid")); //txnid as orderId
+			try {
+				int x=userAPI.payuWalletResponse(parameters);
+				System.out.println("PAYU Rsponse inserted in paytm_txn_details table successfully");
+			} catch (Exception e1) {
+				System.out.println("PAYU Rsponse NOT inserted in paytm_txn_details table successfully");
+				e1.printStackTrace();
+			}
+			rd.forward(request, response);		
+			} catch (Exception e) {
 			e.printStackTrace();
 		}
-		 RequestDispatcher rd=null;
-		 rd=request.getRequestDispatcher("/jsp/payment.jsp");
 
 	}
 	

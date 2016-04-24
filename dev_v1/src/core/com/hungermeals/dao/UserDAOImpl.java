@@ -67,6 +67,7 @@ public class UserDAOImpl implements UserDAO{
 	private SimpleJdbcInsert insertIntoUserCouponMapping;
 	private SimpleJdbcInsert insertPlanSubscription;
 	private SimpleJdbcInsert insertPaytmWalletTrnx;
+	private SimpleJdbcInsert insertPayuWalletTrnx;
 
 
 
@@ -103,6 +104,9 @@ public class UserDAOImpl implements UserDAO{
 		.withTableName("paytm_txn_details")									  
 		.usingGeneratedKeyColumns("id");
 		
+		insertPayuWalletTrnx=new SimpleJdbcInsert(ds)
+		.withTableName("payu_txn_details")									  
+		.usingGeneratedKeyColumns("id");
 		
 		
 	}
@@ -145,6 +149,7 @@ public class UserDAOImpl implements UserDAO{
 					user.setUserId(userId);
 					user.setLogTime(new Date());
 					user.setuCode(ucode);
+					user.setFirstName(user.getuName());
 					user.setuName(user.getEmail());
 					user.setUserStatus(true);
 					response.setResponseCode("HM200");
@@ -692,8 +697,8 @@ public class UserDAOImpl implements UserDAO{
 				System.out.println("text in dao while sending emails------>"+sub.getTEXTBody());
 
 				/************************/
-				String linkSql="SELECT lp.parameter_name,lp.tracking_link,lp.type FROM BV_TEMPLATE_LINKS tl " +
-						"join BV_LINKS_PARAMETER lp on lp.l_id=tl.lp_id and lp.status='a' where " +
+				String linkSql="SELECT lp.parameter_name,lp.tracking_link,lp.type FROM template_link tl " +
+						"join link_parameter lp on lp.l_id=tl.lp_id and lp.status='a' where " +
 						"tl.T_ID=:TEMPLATE_ID and tl.STATUS='A'";
 				List<MailerBean> templateLinkList1=namedParameterJdbcTemplate.query(linkSql, paramMap, new RowMapper() {
 					@Override
@@ -901,7 +906,9 @@ public class UserDAOImpl implements UserDAO{
 				}
 			}
 		};
+		System.out.println("preparator vaue" +preparator);
 		try {
+			System.out.println("mailsender is="+mailSender);
 			mailSender.send(preparator);
 			System.out.println("Mail send sucessfully");
 			flag=1;
@@ -1342,7 +1349,7 @@ public class UserDAOImpl implements UserDAO{
 	public User getCustomerByOrder(String orderId) {
 		User user=new User();
 		MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
-		String userIdQuery = "SELECT U.USER_ID,U.EMAIL,U.PHONE,O.TOTAL_AMOUNT,U.FIRST_NAME FROM user U join order_details O on U.user_id=O.user_id where O.order_id="+orderId;
+		String userIdQuery = "SELECT U.USER_ID,U.EMAIL,U.PHONE,O.TOTAL_AMOUNT,U.FIRST_NAME,DELIVERY_SLOT,PAYMENT_MODE,LINE_1_BUILDING_NO,LINE_2_STREET_NO,CITY,PINCODE FROM user U join order_details O on U.user_id=O.user_id join user_address UA on UA.USER_ADDRESS_ID=O.ADDRESS_ID where O.order_id="+orderId;
 		try {
 			user=(User) namedParameterJdbcTemplate.queryForObject(userIdQuery,mapSqlParameterSource, new RowMapper(){
 				@Override
@@ -1356,6 +1363,14 @@ public class UserDAOImpl implements UserDAO{
 					user.setMobile(rs.getString("PHONE"));
 					user.setFirstName(rs.getString("FIRST_NAME"));
 					user.setTotalAmount(rs.getDouble("TOTAL_AMOUNT"));
+					user.setTemp2(rs.getString("DELIVERY_SLOT"));
+					user.setTemp1(rs.getString("PAYMENT_MODE"));
+					Address address=new Address();
+					address.setLine1BuildingNo(rs.getString("LINE_1_BUILDING_NO"));
+					address.setLine2StreetNo(rs.getString("LINE_2_STREET_NO"));
+					address.setCity(rs.getString("CITY"));
+					address.setpCode(rs.getString("PINCODE"));
+					user.setAddress(address);
 					return user;
 				}
 			});
@@ -1451,6 +1466,23 @@ public List<Menu> menu() {
 		}
 	});	
 	return menuList;
+}
+
+@Override
+public int payuWalletResponse(TreeMap<String, String> parameters) {
+	MapSqlParameterSource data=new MapSqlParameterSource();
+	for (Map.Entry<String, String> entry : parameters.entrySet()){
+		 System.out.println(entry.getKey() + "/" + entry.getValue());
+		data.addValue(entry.getKey(), entry.getValue());
+		}
+	int addId=0;
+	try {
+		addId=insertPayuWalletTrnx.executeAndReturnKey(data).intValue();
+	} catch (Exception e) {
+		e.printStackTrace();
+	}
+	return addId;
+
 }
 
 }

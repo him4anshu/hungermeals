@@ -32,4 +32,6 @@ public interface AdminFacade {
 
 	Menu alterMenu(Menu menu);
 
+	List<OrderDetails> subscriptionList(String orderStatus);
+
 }

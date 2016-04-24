@@ -22,6 +22,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 
 import com.hungermeals.common.ConfigReader;
 import com.hungermeals.persist.Address;
+import com.hungermeals.persist.ComboDetails;
 import com.hungermeals.persist.Item;
 import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.Order;
@@ -64,7 +65,7 @@ public class AdminDAOImpl implements AdminDAO {
 		requiredOrderStatus = requiredOrderStatus.substring(0,
 				requiredOrderStatus.length() - 1);
 		MapSqlParameterSource mapSqlParameterSourceAddress = new MapSqlParameterSource();
-		String orderDetailsQuery = "SELECT OD.USER_ID,OD.ORDER_ID,OD.ADDRESS_ID,OD.TOTAL_AMOUNT,OD.DELIVERY_SLOT,"
+		String orderDetailsQuery = "SELECT U.FIRST_NAME,OD.USER_ID,OD.ORDER_ID,OD.ADDRESS_ID,OD.TOTAL_AMOUNT,OD.DELIVERY_SLOT,"
 				+ " OD.DELIVERY_CHARGES,OD.PAYMENT_MODE,OD.COUPON_CODE,OD.DELIVERY_TIME,"
 				+ " U.FIRST_NAME,U.EMAIL,U.PHONE,U.USER_CODE,U.USER_TYPE,"
 				+ " UA.NAME,UA.PHONE,UA.LINE_1_BUILDING_NO,UA.LINE_2_STREET_NO,UA.CITY,"
@@ -105,6 +106,7 @@ public class AdminDAOImpl implements AdminDAO {
 						/* Getting user details */
 						User user = new User();
 						try {
+							user.setFirstName(rs.getString("FIRST_NAME"));
 							user.setuName(rs.getString("EMAIL"));
 							user.setuCode(rs.getString("USER_CODE"));
 							user.setUserId(rs.getInt("USER_ID"));
@@ -547,6 +549,84 @@ public class AdminDAOImpl implements AdminDAO {
 		}else{
 			return menu;
 		}
+	
+	}
+
+	@Override
+	public List<OrderDetails> subscriptionList(String orderStatus) {
+		MapSqlParameterSource mapSqlParameterSourceAddress = new MapSqlParameterSource();
+		String orderDetailsQuery = "SELECT U.USER_ID,OD.PLAN_TYPE,OD.SELECTED_DATE,OD.PLAN_STATUS,OD.STATUS,OD.CREATION_DATE,"
+				+ " OD.MODIFIED_DATE,OD.START_DATE,OD.END_DATE,OD.PLAN_COST,OD.ADDRESS_ID,OD.COMBO_ID,OD.TIME_SLOT,OD.PAYMENT_MODE,"
+				+ " U.FIRST_NAME,U.EMAIL,U.PHONE,U.USER_CODE,U.USER_TYPE,"
+				+ " UA.NAME,UA.PHONE,UA.LINE_1_BUILDING_NO,UA.LINE_2_STREET_NO,UA.CITY,"
+				+ " UA.STATE,UA.PINCODE,CD.COMBO_NAME,CD.COMBO_PRICE "
+				+ " FROM plan_subscription OD"
+				+ " JOIN user U ON OD.USER_ID=U.USER_ID"
+				+ " JOIN user_address UA ON OD.ADDRESS_ID=UA.USER_ADDRESS_ID"
+				+ " JOIN combo_details CD on CD.combo_id=OD.combo_id"
+				+ " ORDER BY OD.ID DESC";
+		System.out.println(orderDetailsQuery);
+		List<OrderDetails> orderDetailsList = namedParameterJdbcTemplate.query(
+				orderDetailsQuery, mapSqlParameterSourceAddress,
+				new RowMapper() {
+					@Override
+					public Object mapRow(ResultSet rs, int rowNum)
+							throws SQLException {
+						OrderDetails orderDetails = new OrderDetails();
+
+						/* Getting address data */
+						Address address = new Address();
+						try {
+							address.setAddressId(rs.getInt("ADDRESS_ID"));
+							address.setCity(rs.getString("CITY"));
+							address.setLine1BuildingNo(rs
+									.getString("LINE_1_BUILDING_NO"));
+							address.setLine2StreetNo(rs
+									.getString("LINE_2_STREET_NO"));
+							address.setpCode(rs.getString("PINCODE"));
+							address.setPhone(rs.getString("PHONE"));
+							address.setState(rs.getString("STATE"));
+						} catch (Exception e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+
+						/* Getting user details */
+						User user = new User();
+						try {
+							user.setFirstName(rs.getString("FIRST_NAME"));
+							user.setuName(rs.getString("EMAIL"));
+							user.setuCode(rs.getString("USER_CODE"));
+							user.setUserId(rs.getInt("USER_ID"));
+							user.setAddress(address);
+						} catch (Exception e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+
+						/* Getting Order details */
+						PlanSubscription planSubscription=new PlanSubscription();
+						planSubscription.setPlanType(rs.getString("PLAN_TYPE"));
+						planSubscription.setSelectedDate(rs.getString("SELECTED_DATE"));
+						planSubscription.setPlanStatus(rs.getString("PLAN_STATUS"));
+						planSubscription.setStartDate(rs.getString("START_DATE"));
+						planSubscription.setEndDate(rs.getString("END_DATE"));
+						planSubscription.setPlanCost(rs.getInt("PLAN_COST"));
+						planSubscription.setAddressId(rs.getInt("ADDRESS_ID"));
+						planSubscription.setComboId(rs.getString("COMBO_ID"));
+						planSubscription.setTimeSlot(rs.getString("TIME_SLOT"));
+						planSubscription.setPaymentMode(rs.getString("PAYMENT_MODE"));
+						
+						ComboDetails comboDetails=new ComboDetails();
+						comboDetails.setComboName(rs.getString("COMBO_NAME"));
+						comboDetails.setCost(rs.getInt("COMBO_PRICE"));
+						comboDetails.setPlanSubscriptionDetails(planSubscription);
+						orderDetails.setComboDetails(comboDetails);
+						orderDetails.setUser(user);			
+						return orderDetails;
+					}
+				});
+		return orderDetailsList;
 	
 	}
 }
