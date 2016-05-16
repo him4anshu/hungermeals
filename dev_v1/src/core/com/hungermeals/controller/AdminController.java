@@ -11,6 +11,7 @@ import javax.ws.rs.Produces;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.hungermeals.api.AdminAPI;
+import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.Item;
 import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.OrderDetails;
@@ -122,5 +123,12 @@ public class AdminController {
     @Produces("application/json")
 	public List<OrderDetails> subscriptionList(@PathParam("orderStatus") String orderStatus){
 		return adminAPI.subscriptionList(orderStatus);
+	}
+	
+	@POST
+	@Path("/alterCoupon.json")
+    @Produces("application/json")
+	public CouponTxn alterCoupon(CouponTxn couponDetails){
+		return adminAPI.alterCoupon(couponDetails);
 	}
 }

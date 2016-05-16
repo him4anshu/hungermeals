@@ -23,6 +23,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import com.hungermeals.common.ConfigReader;
 import com.hungermeals.persist.Address;
 import com.hungermeals.persist.ComboDetails;
+import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.Item;
 import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.Order;
@@ -42,6 +43,7 @@ public class AdminDAOImpl implements AdminDAO {
 	private JdbcTemplate jdbcTemplate;
 	private SimpleJdbcInsert insertMenu;
 	private SimpleJdbcInsert insertItem;
+	private SimpleJdbcInsert insertCoupon;
 
 	public void setDataSource(DataSource ds) {
 		namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(ds);
@@ -52,6 +54,9 @@ public class AdminDAOImpl implements AdminDAO {
 
 		insertItem = new SimpleJdbcInsert(ds).withTableName("item")
 				.usingGeneratedKeyColumns("item_id");
+		
+		insertCoupon = new SimpleJdbcInsert(ds).withTableName("coupon_details")
+				.usingGeneratedKeyColumns("id");
 	}
 
 	@Override
@@ -627,6 +632,146 @@ public class AdminDAOImpl implements AdminDAO {
 					}
 				});
 		return orderDetailsList;
+	
+	}
+
+	@Override
+	public CouponTxn alterCoupon(CouponTxn couponDetails) {
+		if(couponDetails.getOperationType().equalsIgnoreCase("ADDCOUPON")){
+			return addCoupon(couponDetails);
+		}else if(couponDetails.getOperationType().equalsIgnoreCase("UPDATECOUPON")){
+			return updateCoupon(couponDetails);
+		}else if(couponDetails.getOperationType().equalsIgnoreCase("DELETECOUPON")){
+			return deleteCoupon(couponDetails);
+		}else if(couponDetails.getOperationType().equalsIgnoreCase("GETCOUPON")){
+			return getCoupon(couponDetails);
+		}else{
+			return couponDetails;
+		}
+	
+		}
+
+	private CouponTxn getCoupon(CouponTxn couponDetails) {
+
+		MapSqlParameterSource map = new MapSqlParameterSource();
+		map.addValue("ID", couponDetails.getCouponId());
+		String couponDetailsQuery ="SELECT * FROM coupon_details WHERE ID=:ID ";
+		System.out.println("Coupon validation check query "+couponDetailsQuery);
+		CouponTxn cp=new CouponTxn();
+		try {
+			cp = (CouponTxn) namedParameterJdbcTemplate.queryForObject(couponDetailsQuery,map, new RowMapper(){
+			@Override
+			public Object mapRow(ResultSet rs, int arg1)
+					throws SQLException {
+				CouponTxn couponDetails=new CouponTxn();
+				couponDetails.setCouponCode(rs.getString("coupon_code"));
+				couponDetails.setCouponValue(rs.getString("coupon_value"));
+				couponDetails.setCouponType(rs.getString("coupon_type"));
+				couponDetails.setCouponValueType(rs.getString("coupon_value_type"));
+				couponDetails.setResue_attempt(rs.getInt("reuse_attempt"));
+				couponDetails.setCouponType(rs.getString("coupon_type"));
+				return couponDetails;
+			}
+		 });
+		} catch (DataAccessException e) {
+			cp.setCouponAppliedStatus("Invalid");
+			e.printStackTrace();
+		}	
+		return cp;
+	
+	}
+
+	private CouponTxn deleteCoupon(CouponTxn couponDetails) {
+		ResponseStatus response = new ResponseStatus();
+		couponDetails.setResponseStatus(response);
+		MapSqlParameterSource updateCoupon = new MapSqlParameterSource();
+		updateCoupon.addValue("ID", couponDetails.getCouponId());
+		String updateCouponQuery = "UPDATE coupon_details SET STATUS='D' WHERE ID=:ID";
+		int updateResult = 0;
+		try {
+			updateResult = namedParameterJdbcTemplate.update(updateCouponQuery,
+					updateCoupon);
+			if (updateResult != 0) {
+				response.setResponseCode("HM200");
+				response.setResponseMessage(configReader.getValue("HM200"));
+			} else {
+				response.setResponseCode("HM203");
+				response.setResponseMessage(configReader.getValue("HM203"));
+			}
+		} catch (DataAccessException e1) {
+			e1.printStackTrace();
+			response.setResponseCode("HM103");
+			response.setResponseMessage(configReader.getValue("HM103"));
+			response.setErrorDetails(e1.getMessage());
+
+		}
+		return couponDetails;
+	
+	}
+
+	private CouponTxn updateCoupon(CouponTxn couponDetails) {
+
+		ResponseStatus response = new ResponseStatus();
+		couponDetails.setResponseStatus(response);
+		MapSqlParameterSource updateCoupon = new MapSqlParameterSource();
+		updateCoupon.addValue("coupon_code", couponDetails.getCouponCode());
+		updateCoupon.addValue("coupon_value",couponDetails.getCouponValue());
+		updateCoupon.addValue("coupon_type", couponDetails.getCouponType());
+		updateCoupon.addValue("modified_date", new Date());
+		updateCoupon.addValue("status", "A");
+		updateCoupon.addValue("reuse_attempt", couponDetails.getResue_attempt());
+		updateCoupon.addValue("coupon_value_type", couponDetails.getCouponValueType());
+		updateCoupon.addValue("coupon_type", couponDetails.getCouponType());
+		//updateMenu.addValue("MODIFIED_DATE", new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date()));
+		String updateCouponQuery = "UPDATE coupon_details SET coupon_code=:coupon_code,coupon_value=:coupon_value,coupon_type=:coupon_type,modified_date=now(),reuse_attempt=:reuse_attempt,coupon_value_type=:coupon_value_type,coupon_type=:coupon_type WHERE MENU_ID=:MENU_ID";
+		int updateResult = 0;
+		try {
+			updateResult = namedParameterJdbcTemplate.update(updateCouponQuery,
+					updateCoupon);
+			if (updateResult != 0) {
+				response.setResponseCode("HM200");
+				response.setResponseMessage(configReader.getValue("HM200"));
+			} else {
+				response.setResponseCode("HM203");
+				response.setResponseMessage(configReader.getValue("HM203"));
+			}
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+			response.setResponseCode("HM103");
+			response.setResponseMessage(configReader.getValue("HM103"));
+			response.setErrorDetails(e.getMessage());
+
+		}
+		return couponDetails;
+	
+	}
+
+	private CouponTxn addCoupon(CouponTxn couponDetails) {
+		ResponseStatus response = new ResponseStatus();
+		MapSqlParameterSource newMenuInsert = new MapSqlParameterSource();
+		newMenuInsert.addValue("coupon_code", couponDetails.getCouponCode());
+		newMenuInsert.addValue("coupon_value",couponDetails.getCouponValue());
+		newMenuInsert.addValue("coupon_type", couponDetails.getCouponType());
+		newMenuInsert.addValue("creation_date", new Date());
+		newMenuInsert.addValue("modified_date", new Date());
+		newMenuInsert.addValue("status", "A");
+		newMenuInsert.addValue("reuse_attempt", couponDetails.getResue_attempt());
+		newMenuInsert.addValue("coupon_value_type", couponDetails.getCouponValueType());
+		newMenuInsert.addValue("coupon_type", couponDetails.getCouponType());
+	try {
+			int couponId = insertCoupon.executeAndReturnKey(newMenuInsert)
+					.intValue();
+			couponDetails.setCouponId(couponId+"");
+			response.setResponseCode("HM200");
+			response.setResponseMessage(configReader.getValue("HM200"));
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.setResponseCode("HM103");
+			response.setResponseMessage(configReader.getValue("HM103"));
+			response.setErrorDetails(e.getMessage());
+		}
+	couponDetails.setResponseStatus(response);
+		return couponDetails;
 	
 	}
 }

@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.hungermeals.common.ConfigReader;
 import com.hungermeals.common.SMSThirdPartyService;
 import com.hungermeals.dao.AdminDAO;
+import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.Item;
 import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.OrderDetails;
@@ -43,7 +44,7 @@ public class AdminFacadeImpl implements AdminFacade{
 				if(os[0].equals("2")){
 					templateId=configReader.getValue("sms.orderconfirmed");
 					orderDependentParameters.put("F1", os[1]);
-					orderDependentParameters.put("F2", "9923422222");
+					orderDependentParameters.put("F2", configReader.getValue("admin.phone1"));
 				}else if(os[0].equals("3")){
 
 				}else if(os[0].equals("4")){
@@ -122,6 +123,11 @@ public class AdminFacadeImpl implements AdminFacade{
 	@Override
 	public List<OrderDetails> subscriptionList(String orderStatus) {
 		return adminDAO.subscriptionList(orderStatus);
+
+	}
+	@Override
+	public CouponTxn alterCoupon(CouponTxn couponDetails) {
+		return adminDAO.alterCoupon(couponDetails);
 
 	}
 

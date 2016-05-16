@@ -46,5 +46,6 @@ public interface UserAPI {
 	List<Menu> allMenuDetail();
 	List<Menu> menu();
 	int payuWalletResponse(TreeMap<String, String> parameters);
+	String updateOrderStatus(String string);
 
 }

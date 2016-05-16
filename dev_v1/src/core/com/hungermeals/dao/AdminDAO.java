@@ -2,6 +2,7 @@ package com.hungermeals.dao;
 
 import java.util.List;
 
+import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.Item;
 import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.OrderDetails;
@@ -36,6 +37,8 @@ public interface AdminDAO {
 	Menu alterMenu(Menu menu);
 
 	List<OrderDetails> subscriptionList(String orderStatus);
+
+	CouponTxn alterCoupon(CouponTxn couponDetails);
 
 
 }

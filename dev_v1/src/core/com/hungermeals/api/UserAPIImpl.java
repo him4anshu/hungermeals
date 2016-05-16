@@ -184,6 +184,12 @@ public class UserAPIImpl implements UserAPI{
 		return userFacade.payuWalletResponse(parameters);
 	}
 
+	@Override
+	public String updateOrderStatus(String string) {
+		return userFacade.updateOrderStatus(string);
+
+	}
+
 
 	
 

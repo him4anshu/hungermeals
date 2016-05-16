@@ -73,4 +73,7 @@ public interface UserFacade {
 
 	int payuWalletResponse(TreeMap<String, String> parameters);
 
+	String updateOrderStatus(String string);
+
+
 }

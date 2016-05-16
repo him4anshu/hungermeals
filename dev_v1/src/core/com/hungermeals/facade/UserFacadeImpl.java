@@ -23,6 +23,7 @@ import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.MailerDTO;
 import com.hungermeals.persist.MailingDetails;
 import com.hungermeals.persist.Menu;
+import com.hungermeals.persist.Order;
 import com.hungermeals.persist.OrderDetails;
 import com.hungermeals.persist.OrderStatus;
 import com.hungermeals.persist.PlanSubscription;
@@ -98,7 +99,7 @@ public class UserFacadeImpl implements UserFacade{
 	@Override
 	public OrderStatus orderConfirm(OrderDetails orderDetails) {
 		OrderStatus orderStatus = userDAO.orderConfirm(orderDetails);
-		if("Order placed".equals(orderStatus.getOrderStatusDesc() ) && orderDetails.getOrderInfo().getPaymentMode().equalsIgnoreCase("COD")){
+		if("Order placed".equals(orderStatus.getOrderStatusDesc() ) && (orderDetails.getOrderInfo().getPaymentMode().equalsIgnoreCase("COD") || orderDetails.getOrderInfo().getPaymentMode().equalsIgnoreCase("PAYUAPP") || orderDetails.getOrderInfo().getPaymentMode().equalsIgnoreCase("PAYTMAPP"))){
 			String templateId=configReader.getValue("sms.orderplaced4customer");
 			SMSThirdPartyService sms=new SMSThirdPartyService();
 			String phone=orderDetails.getUser().getMobile();
@@ -124,7 +125,8 @@ public class UserFacadeImpl implements UserFacade{
 			orderDependentParameters1.put("F4", "-"+phone);
 			String adminPhone=configReader.getValue("admin.phone");
 			try {
-				sms.sendOrderConfermation(new Long(adminPhone), new Long(templateId1), orderDependentParameters1);
+				//sms.sendOrderConfermation(new Long(adminPhone), new Long(templateId1), orderDependentParameters1);
+				sms.sendOrderConfermation(adminPhone, new Long(templateId1), orderDependentParameters1);
 			} catch (NumberFormatException e) {
 				e.printStackTrace();
 			} catch (Exception e) {
@@ -235,7 +237,7 @@ public class UserFacadeImpl implements UserFacade{
 	@Override
 	public PlanSubscription planSubscription(PlanSubscription planSubscription) {
 		PlanSubscription p= userDAO.planSubscription(planSubscription);
-		if(p.getPlanSubscribeId()!=0){
+		if(p.getPlanSubscribeId()!=0 && ("COD".equalsIgnoreCase(planSubscription.getPaymentMode()) || planSubscription.getPaymentMode().equalsIgnoreCase("PAYUAPP") || planSubscription.getPaymentMode().equalsIgnoreCase("PAYTMAPP"))){
 			String templateId=configReader.getValue("sms.subscribeplan");
 			SMSThirdPartyService sms=new SMSThirdPartyService();
 			String phone=planSubscription.getMobile();
@@ -251,6 +253,43 @@ public class UserFacadeImpl implements UserFacade{
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+		}else if(p.getPlanSubscribeId()!=0 && "PAYTM".equalsIgnoreCase(planSubscription.getPaymentMode())){
+			OrderStatus orderStatus=new OrderStatus();
+			OrderDetails orderDetails=new OrderDetails();
+			orderStatus.setOrderId(p.getPlanSubscribeId());
+			User user=new User();
+			user.setuCode(planSubscription.getuCode());
+			user.setMobile(planSubscription.getMobile());
+			user.setEmail(planSubscription.getEmail());
+			orderDetails.setUser(user);
+			Order orderInfo=new Order();
+			orderInfo.setTotalAmount(planSubscription.getPlanCost());
+			orderDetails.setOrderInfo(orderInfo);
+			PaytmService paytmService = new PaytmService();
+			TreeMap<String,String> parameters=paytmService.paytmWalletRequestParameter(orderDetails,orderStatus);
+			orderStatus.setWalletRequest(parameters);
+			String checksum="";
+			try {
+				checksum = CheckSumServiceHelper.getCheckSumServiceHelper().genrateCheckSum(PaytmConstants.MERCHANT_KEY, parameters);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			orderStatus.setChecksum(checksum);
+		}else if(p.getPlanSubscribeId()!=0 && "PAYU".equalsIgnoreCase(planSubscription.getPaymentMode())){
+			OrderStatus orderStatus=new OrderStatus();
+			OrderDetails orderDetails=new OrderDetails();
+			orderStatus.setOrderId(p.getPlanSubscribeId());
+			User user=new User();
+			user.setuCode(planSubscription.getuCode());
+			user.setMobile(planSubscription.getMobile());
+			user.setEmail(planSubscription.getEmail());
+			orderDetails.setUser(user);
+			Order orderInfo=new Order();
+			orderInfo.setTotalAmount(planSubscription.getPlanCost());
+			orderDetails.setOrderInfo(orderInfo);
+			PayuService payuService = new PayuService();
+			orderStatus.setWalletRequest(payuService.payuWalletRequestParameter(orderDetails,orderStatus));
 		}
 		return p;
 
@@ -398,7 +437,8 @@ public class UserFacadeImpl implements UserFacade{
 		orderDependentParameters1.put("F4", "-"+user.getMobile());
 		String adminPhone=configReader.getValue("admin.phone");
 		try {
-			sms.sendOrderConfermation(new Long(adminPhone), new Long(templateId1), orderDependentParameters1);
+			//sms.sendOrderConfermation(new Long(adminPhone), new Long(templateId1), orderDependentParameters1);
+			sms.sendOrderConfermation(adminPhone, new Long(templateId1), orderDependentParameters1);
 		} catch (NumberFormatException e) {
 			e.printStackTrace();
 		} catch (Exception e) {
@@ -406,27 +446,32 @@ public class UserFacadeImpl implements UserFacade{
 		}
 	
 			//Send Email
-			MailerDTO mailerData=new MailerDTO();
-			mailerData.setTo(new String[]{user.getEmail()});
-			mailerData.setSubject(configReader.getValue("mail.orderconfirm.subject"));
-			mailerData.setFileName(configReader.getValue("mail.orderconfirm.templateName"));
-			Map<String, Object> dynamicData=new HashMap<String, Object>();
-			dynamicData.put("orderNumber", orderId);
-			dynamicData.put("userName", user.getFirstName());
-			dynamicData.put("deliveryTime", user.getTemp2());
-			dynamicData.put("totalAmount", user.getTotalAmount());
-			dynamicData.put("phone", user.getMobile());
-			dynamicData.put("paymentMode", user.getTemp1());
-			dynamicData.put("line1BuildingNo", user.getAddress().getLine1BuildingNo());
-			dynamicData.put("line2StreetNo", user.getAddress().getLine2StreetNo());
-			dynamicData.put("city", user.getAddress().getCity());
-			dynamicData.put("pCode", user.getAddress().getpCode());
-			dynamicData.put("email", user.getEmail());
-			mailerData.setDynamicData(dynamicData);
+			try {
+				MailerDTO mailerData=new MailerDTO();
+				mailerData.setTo(new String[]{user.getEmail()});
+				mailerData.setSubject(configReader.getValue("mail.orderconfirm.subject"));
+				mailerData.setFileName(configReader.getValue("mail.orderconfirm.templateName"));
+				Map<String, Object> dynamicData=new HashMap<String, Object>();
+				dynamicData.put("orderNumber", orderId);
+				dynamicData.put("userName", user.getFirstName());
+				dynamicData.put("deliveryTime", user.getTemp2());
+				dynamicData.put("totalAmount", user.getTotalAmount());
+				dynamicData.put("phone", user.getMobile());
+				dynamicData.put("paymentMode", user.getTemp1());
+				dynamicData.put("line1BuildingNo", user.getAddress().getLine1BuildingNo());
+				dynamicData.put("line2StreetNo", user.getAddress().getLine2StreetNo());
+				dynamicData.put("city", user.getAddress().getCity());
+				dynamicData.put("pCode", user.getAddress().getpCode());
+				dynamicData.put("email", user.getEmail());
+				mailerData.setDynamicData(dynamicData);
 
-			boolean sendStatus=hungermealsMailSender.sendMail(mailerData);
+				boolean sendStatus=hungermealsMailSender.sendMail(mailerData);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		
-		return userDAO.sendMessage(orderId);
+		return true;
 
 	}
 	@Override
@@ -447,6 +492,11 @@ public class UserFacadeImpl implements UserFacade{
 	@Override
 	public int payuWalletResponse(TreeMap<String, String> parameters) {
 		return userDAO.payuWalletResponse(parameters);
+
+	}
+	@Override
+	public String updateOrderStatus(String string) {
+		return userDAO.updateOrderStatus(string);
 
 	}
 	

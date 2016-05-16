@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.hungermeals.facade.AdminFacade;
+import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.Item;
 import com.hungermeals.persist.Menu;
 import com.hungermeals.persist.OrderDetails;
@@ -84,6 +85,12 @@ public class AdminAPIImpl implements AdminAPI{
 	@Override
 	public List<OrderDetails> subscriptionList(String orderStatus) {
 		return adminFacade.subscriptionList(orderStatus);
+
+	}
+
+	@Override
+	public CouponTxn alterCoupon(CouponTxn couponDetails) {
+		return adminFacade.alterCoupon(couponDetails);
 
 	}
 

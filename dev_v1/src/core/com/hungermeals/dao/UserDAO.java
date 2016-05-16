@@ -76,4 +76,6 @@ public interface UserDAO {
 
 	int payuWalletResponse(TreeMap<String, String> parameters);
 
+	String updateOrderStatus(String orderStatus);
+
 }

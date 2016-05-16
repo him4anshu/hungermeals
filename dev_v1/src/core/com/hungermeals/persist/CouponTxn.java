@@ -15,7 +15,8 @@ public class CouponTxn {
 	private int resue_attempt;
 	private int use_attempt;
 	private ResponseStatus responseStatus;
-
+	private String operationType;
+	private String status;
 	
 	public String getuCode() {
 		return uCode;
@@ -76,6 +77,18 @@ public class CouponTxn {
 	}
 	public void setResponseStatus(ResponseStatus responseStatus) {
 		this.responseStatus = responseStatus;
+	}
+	public String getOperationType() {
+		return operationType;
+	}
+	public void setOperationType(String operationType) {
+		this.operationType = operationType;
+	}
+	public String getStatus() {
+		return status;
+	}
+	public void setStatus(String status) {
+		this.status = status;
 	}
 	
 	

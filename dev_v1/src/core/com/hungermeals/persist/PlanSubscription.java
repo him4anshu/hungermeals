@@ -20,6 +20,7 @@ public class PlanSubscription {
 	private ResponseStatus responseStatus;
 	private boolean updatedStatus;
 	private Address address;
+	private String email;
 	public String getPlanType() {
 		return planType;
 	}
@@ -115,6 +116,12 @@ public class PlanSubscription {
 	}
 	public void setAddress(Address address) {
 		this.address = address;
+	}
+	public String getEmail() {
+		return email;
+	}
+	public void setEmail(String email) {
+		this.email = email;
 	}
 	
 	

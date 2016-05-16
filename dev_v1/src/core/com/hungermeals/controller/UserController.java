@@ -23,6 +23,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.hungermeals.api.UserAPI;
 import com.hungermeals.common.PaytmConstants;
 import com.hungermeals.common.PayuConstant;
@@ -247,6 +249,7 @@ public class UserController {
 			isValideChecksum = PayuService.verifyCheckSumHash(parameters,payuChecksum);
 			if(isValideChecksum && parameters.containsKey("RESPCODE")){
 				if(parameters.get("RESPCODE").equals("01")){
+					userAPI.updateOrderStatus(1+"@@"+parameters.get("ORDERID"));
 					outputHTML = parameters.toString();
 				}else{
 					outputHTML="<b>Payment Failed.</b>";
@@ -281,18 +284,70 @@ public class UserController {
 		return userAPI.sendEmail(orderId);
 	}
 	
-	@GET
+	@POST
 	@Path("/paytmCheckSumGenrator.json")
-    @Produces("application/json")
-	public String paytmCheckSumGenrator(){
-		return null;
+	public String paytmCheckSumGenrator(OrderDetails orderDetails, @Context HttpServletRequest request,@Context HttpServletResponse response){
+		System.out.println("paytmCheckSumGenrator");
+		TreeMap<String,String> parameters = new TreeMap<String,String>();
+		parameters.put("ORDER_ID",UUID.randomUUID().toString());
+		parameters.put("CUST_ID", orderDetails.getUser().getuCode());
+		parameters.put("TXN_AMOUNT", orderDetails.getOrderInfo().getTotalAmount()+"");
+		//parameters.put("REQUEST_TYPE",PaytmConstants.REQUEST_TYPE);
+		parameters.put("MID",PaytmConstants.MID);
+		parameters.put("CHANNEL_ID",PaytmConstants.CHANNEL_ID);
+		parameters.put("INDUSTRY_TYPE_ID",PaytmConstants.INDUSTRY_TYPE_ID);
+		parameters.put("WEBSITE",PaytmConstants.WEBSITE);
+		parameters.put("MOBILE_NO", orderDetails.getUser().getMobile());
+		parameters.put("EMAIL", orderDetails.getUser().getEmail());
+		//parameters.put("ORDER_DETAILS", "Some messages");
+		//parameters.put("VERIFIED_BY", "MOBILE_NO"); //EMAIL or MOBILE_NO
+		//parameters.put("IS_USER_VERIFIED", "YES"); //YES /NO
+		parameters.put("CALLBACK_URL", PaytmConstants.CALLBACK_URL);
+		
+		String paytmChecksum =  "";
+		
+		String checkSum=null;
+		try {
+			checkSum = CheckSumServiceHelper.getCheckSumServiceHelper().genrateCheckSum(PaytmConstants.MERCHANT_KEY, parameters);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		parameters.put("CHECKSUMHASH",checkSum);
+		parameters.put("payt_STATUS","1");
+		Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+		return gson.toJson(parameters);
+		//return null;
 	}
 	
-	@GET
+	@POST
 	@Path("/paytmCheckSumValidator.json")
-    @Produces("application/json")
-	public boolean paytmCheckSumValidator(){
-		return false;
+	@Consumes("application/x-www-form-urlencoded")
+	public String paytmCheckSumValidator(@Context HttpServletRequest request,@Context HttpServletResponse response){
+		Enumeration<String> paramNames = request.getParameterNames();
+		
+		Map<String, String[]> mapData = request.getParameterMap();
+		TreeMap<String,String> parameters = new TreeMap<String,String>();
+		String paytmChecksum =  "";
+		while(paramNames.hasMoreElements()) {
+			String paramName = (String)paramNames.nextElement();
+			if(paramName.equals("CHECKSUMHASH")){
+				paytmChecksum = mapData.get(paramName)[0];
+			}else{
+				parameters.put(paramName,mapData.get(paramName)[0]);
+			}
+		}
+		boolean isValideChecksum = false;
+		try{
+			isValideChecksum = CheckSumServiceHelper.getCheckSumServiceHelper().verifycheckSum(PaytmConstants.MERCHANT_KEY,parameters,paytmChecksum);
+			parameters.put("IS_CHECKSUM_VALID",isValideChecksum==true?"Y":"N");
+		}catch(Exception e){
+			parameters.put("IS_CHECKSUM_VALID",isValideChecksum==true?"Y":"N");	
+		}
+		
+		//
+		Gson gson = new GsonBuilder().disableHtmlEscaping().create();	
+		return gson.toJson(parameters);
 	}
 
 	@POST
@@ -334,6 +389,7 @@ public class UserController {
 					try {
 						System.out.println("Processed Order Id by PAYTM="+parameters.get("ORDERID"));
 						sendMessage(parameters.get("ORDERID"));
+						userAPI.updateOrderStatus(1+"@@"+parameters.get("ORDERID"));
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -384,7 +440,19 @@ public class UserController {
 			}
 			System.out.println(paramName+"===>"+mapData.get(paramName)[0]);
 		}
-		 sendMessage(parameters.get("txnid")); //txnid as orderId
+		 try {
+			sendMessage(parameters.get("txnid")); //txnid as orderId
+		} catch (Exception e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		 try {
+			userAPI.updateOrderStatus(1+"@@"+parameters.get("txnid"));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		//Inserting PAYTM response to database
 			try {
 				int x=userAPI.payuWalletResponse(parameters);

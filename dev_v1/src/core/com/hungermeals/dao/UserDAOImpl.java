@@ -28,8 +28,10 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.mail.javamail.MimeMessagePreparator;
 
 import com.hungermeals.common.ConfigReader;
+import com.hungermeals.common.PaytmConstants;
 import com.hungermeals.common.StringEncrypterService;
 import com.hungermeals.common.TemplateProcessing;
+import com.hungermeals.common.UserDataValidator;
 import com.hungermeals.handler.TemplateDetailsRowMapper;
 import com.hungermeals.handler.UserDetailsRowMapper;
 import com.hungermeals.persist.Address;
@@ -68,6 +70,7 @@ public class UserDAOImpl implements UserDAO{
 	private SimpleJdbcInsert insertPlanSubscription;
 	private SimpleJdbcInsert insertPaytmWalletTrnx;
 	private SimpleJdbcInsert insertPayuWalletTrnx;
+	private SimpleJdbcInsert insertOrderStatus;
 
 
 
@@ -108,6 +111,10 @@ public class UserDAOImpl implements UserDAO{
 		.withTableName("payu_txn_details")									  
 		.usingGeneratedKeyColumns("id");
 		
+		insertOrderStatus=new SimpleJdbcInsert(ds)
+		.withTableName("order_status")
+		.usingGeneratedKeyColumns("id");
+		
 		
 	}
 
@@ -116,6 +123,9 @@ public class UserDAOImpl implements UserDAO{
 			//Checking already registered email
 			ResponseStatus response=new ResponseStatus();
 			user.setResponseStatus(response);
+			if(UserDataValidator.validateName(user.getuName()) 
+					&& UserDataValidator.validateEmail(user.getEmail()) 
+					&& UserDataValidator.validatePhone(user.getMobile())){
 			MapSqlParameterSource paramMap=new MapSqlParameterSource();
 			paramMap.addValue("EMAIL",user.getEmail());	
 			paramMap.addValue("PHONE",user.getMobile());	
@@ -192,10 +202,14 @@ public class UserDAOImpl implements UserDAO{
 					response.setErrorDetails(e.getMessage());
 					user.setUserStatus(false);
 				}
-				return user;
-			
-			
+				return user;	
 			}
+		}else{
+			response.setResponseCode("HM206");
+			response.setResponseMessage(configReader.getValue("HM206"));
+			response.setErrorDetails("First Name OR Email OR Phone is invalid");
+			user.setUserStatus(false);
+		}
 	  return user;
 	}
 
@@ -415,6 +429,7 @@ public class UserDAOImpl implements UserDAO{
 		orderStatus.setOrderId(orderId);
 		//orderStatus.setExecutiveName("MK Jcob");
 		//orderStatus.setExecutivePhone("7829777997");
+		insertOrderStatus(orderId,orderDetails.getOrderInfo().getPaymentMode());
 		return orderStatus;
 	}
 
@@ -1041,7 +1056,7 @@ public class UserDAOImpl implements UserDAO{
 
 	@Override
 	public PlanSubscription planSubscription(PlanSubscription planSubscription) {
-		
+
 		ResponseStatus res=new ResponseStatus();
 		int userId=getUserIdByUserCode(planSubscription.getuCode());
 		if(userId!=0){
@@ -1309,7 +1324,7 @@ public class UserDAOImpl implements UserDAO{
 
 	@Override
 	public boolean cancelOrder(String orderId) {
-		String cancelOrder="UPDATE order_status SET ORDER_STATUS_ID=6 WHERE ORDER_ID="+orderId+"";
+		String cancelOrder="UPDATE order_status SET ORDER_STATUS_ID=7 WHERE ORDER_ID="+orderId+"";
 		int updateResult=namedParameterJdbcTemplate.update(cancelOrder, new MapSqlParameterSource());
 		if(updateResult==1)
 				return true;
@@ -1485,4 +1500,36 @@ public int payuWalletResponse(TreeMap<String, String> parameters) {
 
 }
 
+public int insertOrderStatus(int orderId,String paymentMode) {
+	MapSqlParameterSource data=new MapSqlParameterSource();
+	data.addValue("ORDER_ID",orderId);
+	if(paymentMode.equalsIgnoreCase("PAYTM"))
+		data.addValue("ORDER_STATUS_ID",8);
+	else if(paymentMode.equalsIgnoreCase("PAYU"))
+		data.addValue("ORDER_STATUS_ID", 8);
+	else if(paymentMode.equalsIgnoreCase("COD"))
+		data.addValue("ORDER_STATUS_ID", 1);
+	int insertedStausId=0;
+	try {
+	insertedStausId=insertOrderStatus.executeAndReturnKey(data).intValue();
+	} catch (Exception e) {
+	// TODO Auto-generated catch block
+	e.printStackTrace();
+	}
+	return insertedStausId;
+}
+
+	@Override
+	public String updateOrderStatus(String orderStatus) {
+		String orders[] = orderStatus.split("@@");
+		String insertFilter = "UPDATE order_status SET ORDER_STATUS_ID="
+			+ orders[0] + " WHERE ORDER_ID=" + orders[1];
+		System.out.println("insertFilter QUERY"+insertFilter);
+		int insertResult = namedParameterJdbcTemplate.update(insertFilter,
+			new MapSqlParameterSource());
+		if (insertResult == 0)
+			return "FAIL";
+		else
+			return "SUCCESS";
+}
 }
