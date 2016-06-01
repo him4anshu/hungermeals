@@ -63,7 +63,7 @@ public interface UserFacade {
 
 	int paytmWalletResponse(TreeMap<String, String> parameters);
 
-	boolean sendMessage(String orderId);
+	boolean sendMessage(String orderId, String orderType);
 
 	boolean sendEmail(String orderId);
 

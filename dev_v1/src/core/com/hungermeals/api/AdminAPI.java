@@ -37,4 +37,8 @@ public interface AdminAPI {
 
 	CouponTxn alterCoupon(CouponTxn couponDetails);
 
+	List<User> getUserListForNotification();
+
+	List<String> getRegistrationIdForNotification();
+
 }

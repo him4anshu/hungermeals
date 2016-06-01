@@ -1,19 +1,32 @@
 package com.hungermeals.controller;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.google.android.gcm.server.Message;
+import com.google.android.gcm.server.MulticastResult;
+import com.google.android.gcm.server.Sender;
 import com.hungermeals.api.AdminAPI;
+import com.hungermeals.common.POST2GCM;
+import com.hungermeals.persist.Content;
 import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.Item;
 import com.hungermeals.persist.Menu;
+import com.hungermeals.persist.MyMessage;
 import com.hungermeals.persist.OrderDetails;
 import com.hungermeals.persist.PlanSubscription;
 import com.hungermeals.persist.User;
@@ -131,4 +144,50 @@ public class AdminController {
 	public CouponTxn alterCoupon(CouponTxn couponDetails){
 		return adminAPI.alterCoupon(couponDetails);
 	}
+	
+	@POST
+	@Path("/GCMBroadcastold.json")
+    @Produces("application/json")
+	public void GCMBroadcastOld(MyMessage message){
+        System.out.println( "Sending POST to GCM" );
+
+        String apiKey = "AIzaSyBcnGBVGBFJBWn0XM_ZEN-dtVzJRKOViL8";
+        List<User> userlist=adminAPI.getUserListForNotification();
+        for (Iterator iterator = userlist.iterator(); iterator.hasNext();) {
+			User user = (User) iterator.next();
+	        Content content = createContent(user,message);
+	        POST2GCM.post(apiKey, content);
+
+		}
+    }
+
+    public Content createContent(User user,MyMessage message){
+        Content c = new Content();
+        
+        //c.addRegId("APA91bFqnQzp0z5IpXWdth1lagGQZw1PTbdBAD13c-UQ0T76BBYVsFrY96MA4SFduBW9RzDguLaad-7l4QWluQcP6zSoX1HSUaAzQYSmI93....");
+        //c.createData("Test Title", "Test Message");
+        c.addRegId(user.getAppRegistrationId());
+        c.createData(message.getMessage(), message.getTitle());
+
+        return c;
+    }
+    @POST
+	@Path("/GCMBroadcast.json")
+    @Produces("application/json")
+	public MulticastResult GCMBroadcast(MyMessage mssg){
+		System.out.println("Inside pushDataToDevice method ###############");
+		Sender gcmSender = new Sender("AIzaSyBcnGBVGBFJBWn0XM_ZEN-dtVzJRKOViL8");
+		Message message = new Message.Builder().priority(Message.Priority.NORMAL)
+				.addData("title",mssg.getTitle())
+				.addData("message",mssg.getMessage()).build();
+        List<String> regIdList=adminAPI.getRegistrationIdForNotification();
+		MulticastResult mRes=null;
+		try {
+			mRes = gcmSender.sendNoRetry(message, regIdList);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return mRes;
+    }
 }

@@ -37,4 +37,8 @@ public interface AdminFacade {
 
 	CouponTxn alterCoupon(CouponTxn couponDetails);
 
+	List<User> getUserListForNotification();
+
+	List<String> getRegistrationIdForNotification();
+
 }

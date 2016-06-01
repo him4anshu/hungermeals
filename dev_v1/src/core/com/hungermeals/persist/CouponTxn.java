@@ -1,5 +1,7 @@
 package com.hungermeals.persist;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name="couponTxn")
@@ -17,6 +19,8 @@ public class CouponTxn {
 	private ResponseStatus responseStatus;
 	private String operationType;
 	private String status;
+	private int minimumPurchaseAmount;
+	private List<CouponTxn> couponTxnList;
 	
 	public String getuCode() {
 		return uCode;
@@ -89,6 +93,18 @@ public class CouponTxn {
 	}
 	public void setStatus(String status) {
 		this.status = status;
+	}
+	public int getMinimumPurchaseAmount() {
+		return minimumPurchaseAmount;
+	}
+	public void setMinimumPurchaseAmount(int minimumPurchaseAmount) {
+		this.minimumPurchaseAmount = minimumPurchaseAmount;
+	}
+	public List<CouponTxn> getCouponTxnList() {
+		return couponTxnList;
+	}
+	public void setCouponTxnList(List<CouponTxn> couponTxnList) {
+		this.couponTxnList = couponTxnList;
 	}
 	
 	

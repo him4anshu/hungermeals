@@ -78,4 +78,6 @@ public interface UserDAO {
 
 	String updateOrderStatus(String orderStatus);
 
+	PlanSubscription getPlanSubscriptionDetails(String orderId);
+
 }

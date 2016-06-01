@@ -35,6 +35,8 @@ public class User {
 	private String mailsendStatus;
 	private String temp1;
 	private String temp2;
+	private String appRegistrationId;
+	private String deviceId;
 	public long getUserId() {
 		return userId;
 	}
@@ -233,6 +235,22 @@ public class User {
 
 	public void setTemp2(String temp2) {
 		this.temp2 = temp2;
+	}
+
+	public String getAppRegistrationId() {
+		return appRegistrationId;
+	}
+
+	public void setAppRegistrationId(String appRegistrationId) {
+		this.appRegistrationId = appRegistrationId;
+	}
+
+	public String getDeviceId() {
+		return deviceId;
+	}
+
+	public void setDeviceId(String deviceId) {
+		this.deviceId = deviceId;
 	}	
 	
 	

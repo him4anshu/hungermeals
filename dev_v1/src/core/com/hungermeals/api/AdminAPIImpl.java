@@ -94,4 +94,16 @@ public class AdminAPIImpl implements AdminAPI{
 
 	}
 
+	@Override
+	public List<User> getUserListForNotification() {
+		return adminFacade.getUserListForNotification();
+
+	}
+
+	@Override
+	public List<String> getRegistrationIdForNotification() {
+		return adminFacade.getRegistrationIdForNotification();
+
+	}
+
 }

@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -21,6 +22,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.mail.javamail.JavaMailSender;
 
 import com.hungermeals.common.ConfigReader;
+import com.hungermeals.handler.UserDetailsRowMapper;
 import com.hungermeals.persist.Address;
 import com.hungermeals.persist.ComboDetails;
 import com.hungermeals.persist.CouponTxn;
@@ -32,6 +34,7 @@ import com.hungermeals.persist.OrderStatus;
 import com.hungermeals.persist.PlanSubscription;
 import com.hungermeals.persist.ResponseStatus;
 import com.hungermeals.persist.User;
+import com.hungermeals.persist.UserBean;
 
 public class AdminDAOImpl implements AdminDAO {
 	@Autowired
@@ -645,11 +648,46 @@ public class AdminDAOImpl implements AdminDAO {
 			return deleteCoupon(couponDetails);
 		}else if(couponDetails.getOperationType().equalsIgnoreCase("GETCOUPON")){
 			return getCoupon(couponDetails);
+		}else if(couponDetails.getOperationType().equalsIgnoreCase("GETALLCOUPON")){
+			return getAllCoupon(couponDetails);
 		}else{
 			return couponDetails;
 		}
 	
 		}
+
+	private CouponTxn getAllCoupon(CouponTxn couponDetails) {
+		MapSqlParameterSource map = new MapSqlParameterSource();
+		map.addValue("ID", couponDetails.getCouponId());
+		String couponDetailsQuery ="SELECT * FROM coupon_details";
+		System.out.println("Coupon validation check query "+couponDetailsQuery);
+		CouponTxn cp=new CouponTxn();
+		List<CouponTxn> couponTxnList=new ArrayList<CouponTxn>();
+		try {
+			couponTxnList =namedParameterJdbcTemplate.query(couponDetailsQuery,map, new RowMapper(){
+			@Override
+			public Object mapRow(ResultSet rs, int arg1)
+					throws SQLException {
+				CouponTxn couponDetails=new CouponTxn();
+				couponDetails.setCouponId(rs.getInt("id")+"");
+				couponDetails.setCouponCode(rs.getString("coupon_code"));
+				couponDetails.setCouponValue(rs.getString("coupon_value"));
+				couponDetails.setCouponType(rs.getString("coupon_type"));
+				couponDetails.setCouponValueType(rs.getString("coupon_value_type"));
+				couponDetails.setResue_attempt(rs.getInt("reuse_attempt"));
+				couponDetails.setCouponType(rs.getString("coupon_type"));
+				couponDetails.setMinimumPurchaseAmount(rs.getInt("minimum_purchase_amount"));
+				couponDetails.setStatus(rs.getString("status"));
+				return couponDetails;
+			}
+		 });
+		} catch (DataAccessException e) {
+			cp.setCouponAppliedStatus("Invalid");
+			e.printStackTrace();
+		}
+		cp.setCouponTxnList(couponTxnList);
+		return cp;
+	}
 
 	private CouponTxn getCoupon(CouponTxn couponDetails) {
 
@@ -664,12 +702,15 @@ public class AdminDAOImpl implements AdminDAO {
 			public Object mapRow(ResultSet rs, int arg1)
 					throws SQLException {
 				CouponTxn couponDetails=new CouponTxn();
+				couponDetails.setCouponId(rs.getInt("id")+"");
 				couponDetails.setCouponCode(rs.getString("coupon_code"));
 				couponDetails.setCouponValue(rs.getString("coupon_value"));
 				couponDetails.setCouponType(rs.getString("coupon_type"));
 				couponDetails.setCouponValueType(rs.getString("coupon_value_type"));
 				couponDetails.setResue_attempt(rs.getInt("reuse_attempt"));
 				couponDetails.setCouponType(rs.getString("coupon_type"));
+				couponDetails.setMinimumPurchaseAmount(rs.getInt("minimum_purchase_amount"));
+				couponDetails.setStatus(rs.getString("status"));
 				return couponDetails;
 			}
 		 });
@@ -722,8 +763,9 @@ public class AdminDAOImpl implements AdminDAO {
 		updateCoupon.addValue("reuse_attempt", couponDetails.getResue_attempt());
 		updateCoupon.addValue("coupon_value_type", couponDetails.getCouponValueType());
 		updateCoupon.addValue("coupon_type", couponDetails.getCouponType());
+		updateCoupon.addValue("ID", couponDetails.getCouponId());
 		//updateMenu.addValue("MODIFIED_DATE", new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date()));
-		String updateCouponQuery = "UPDATE coupon_details SET coupon_code=:coupon_code,coupon_value=:coupon_value,coupon_type=:coupon_type,modified_date=now(),reuse_attempt=:reuse_attempt,coupon_value_type=:coupon_value_type,coupon_type=:coupon_type WHERE MENU_ID=:MENU_ID";
+		String updateCouponQuery = "UPDATE coupon_details SET status=:status,coupon_code=:coupon_code,coupon_value=:coupon_value,coupon_type=:coupon_type,modified_date=now(),reuse_attempt=:reuse_attempt,coupon_value_type=:coupon_value_type,coupon_type=:coupon_type WHERE ID=:ID";
 		int updateResult = 0;
 		try {
 			updateResult = namedParameterJdbcTemplate.update(updateCouponQuery,
@@ -758,6 +800,7 @@ public class AdminDAOImpl implements AdminDAO {
 		newMenuInsert.addValue("reuse_attempt", couponDetails.getResue_attempt());
 		newMenuInsert.addValue("coupon_value_type", couponDetails.getCouponValueType());
 		newMenuInsert.addValue("coupon_type", couponDetails.getCouponType());
+		newMenuInsert.addValue("minimum_purchase_amount", couponDetails.getMinimumPurchaseAmount());
 	try {
 			int couponId = insertCoupon.executeAndReturnKey(newMenuInsert)
 					.intValue();
@@ -773,5 +816,45 @@ public class AdminDAOImpl implements AdminDAO {
 	couponDetails.setResponseStatus(response);
 		return couponDetails;
 	
+	}
+
+	@Override
+	public List<User> getUserListForNotification() {
+
+		List<User> userListDetail=new ArrayList<User>();
+		MapSqlParameterSource paramMap=new MapSqlParameterSource();
+		String userDetailSql="select * from mobile_user where status='A'";
+		try {
+			userListDetail=namedParameterJdbcTemplate.query(userDetailSql, new HashMap(), new RowMapper() {
+
+				@Override
+				public Object mapRow(ResultSet rs, int arg1)
+						throws SQLException {
+					User user=new User();
+					user.setAppRegistrationId(rs.getString("app_registration_id"));
+					user.setDeviceId(rs.getString("device_id"));
+
+					return user;
+				}
+				
+			});
+		} catch (DataAccessException e) {
+			System.out.println("No results found");
+			e.printStackTrace();
+		}
+		return userListDetail;
+	
+	}
+
+	@Override
+	public List<String> getRegistrationIdForNotification() {
+
+		String userDetailSql="select app_registration_id from mobile_user where status='A'";		
+		List<String> regIdList = jdbcTemplate.query(userDetailSql, new RowMapper<String>(){
+            public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+                    return rs.getString(1);
+            }
+		});	
+		return regIdList;
 	}
 }

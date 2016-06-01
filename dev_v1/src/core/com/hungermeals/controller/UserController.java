@@ -8,6 +8,7 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -113,6 +114,8 @@ public class UserController {
 	@Consumes("application/json")
 	public OrderStatus orderConfirm(OrderDetails orderDetails ,@Context HttpServletRequest request,@Context HttpServletResponse response){
 		OrderStatus orderStatus= userAPI.orderConfirm(orderDetails);
+		HttpSession session=request.getSession();
+		session.setAttribute("ORDER_TYPE", "DAILIY_ORDER");
 		return orderStatus;
 	}
 	
@@ -162,7 +165,9 @@ public class UserController {
 	@POST
 	@Path("/planSubscription.json")
     @Produces("application/json")
-	public PlanSubscription planSubscription(PlanSubscription planSubscription){
+	public PlanSubscription planSubscription(PlanSubscription planSubscription,@Context HttpServletRequest request){
+		HttpSession session=request.getSession();
+		session.setAttribute("ORDER_TYPE", "MONTHLY_ORDER");
 		return userAPI.planSubscription(planSubscription);
 	}
 	
@@ -276,8 +281,8 @@ public class UserController {
 		return userAPI.cancelOrder(orderId);
 	}
 	
-	public boolean sendMessage(String orderId){
-		return userAPI.sendMessage(orderId);
+	public boolean sendMessage(String orderId, String orderType){
+		return userAPI.sendMessage(orderId,orderType);
 	}
 	
 	public boolean sendEmail(String orderId){
@@ -388,7 +393,7 @@ public class UserController {
 					outputHTML = parameters.toString();
 					try {
 						System.out.println("Processed Order Id by PAYTM="+parameters.get("ORDERID"));
-						sendMessage(parameters.get("ORDERID"));
+						sendMessage(parameters.get("ORDERID"),request.getSession().getAttribute("ORDER_TYPE")+"");
 						userAPI.updateOrderStatus(1+"@@"+parameters.get("ORDERID"));
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -441,7 +446,8 @@ public class UserController {
 			System.out.println(paramName+"===>"+mapData.get(paramName)[0]);
 		}
 		 try {
-			sendMessage(parameters.get("txnid")); //txnid as orderId
+			sendMessage(parameters.get("txnid"),request.getSession().getAttribute("ORDER_TYPE")+""); //txnid as orderId
+
 		} catch (Exception e2) {
 			// TODO Auto-generated catch block
 			e2.printStackTrace();

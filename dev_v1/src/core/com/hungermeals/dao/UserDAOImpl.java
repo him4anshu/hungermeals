@@ -71,6 +71,7 @@ public class UserDAOImpl implements UserDAO{
 	private SimpleJdbcInsert insertPaytmWalletTrnx;
 	private SimpleJdbcInsert insertPayuWalletTrnx;
 	private SimpleJdbcInsert insertOrderStatus;
+	private SimpleJdbcInsert insertMobileData;
 
 
 
@@ -113,6 +114,10 @@ public class UserDAOImpl implements UserDAO{
 		
 		insertOrderStatus=new SimpleJdbcInsert(ds)
 		.withTableName("order_status")
+		.usingGeneratedKeyColumns("id");
+		
+		insertMobileData=new SimpleJdbcInsert(ds)
+		.withTableName("mobile_user")
 		.usingGeneratedKeyColumns("id");
 		
 		
@@ -164,6 +169,16 @@ public class UserDAOImpl implements UserDAO{
 					user.setUserStatus(true);
 					response.setResponseCode("HM200");
 					response.setResponseMessage(configReader.getValue("HM200"));
+					
+					//inserting data for mobile app registration
+					try {
+						if(user.getAppRegistrationId()!=null)
+							mobileAppData(user);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
 					}catch (Exception e) {
 						user.setUserStatus(false);
 						e.printStackTrace();
@@ -1507,7 +1522,7 @@ public int insertOrderStatus(int orderId,String paymentMode) {
 		data.addValue("ORDER_STATUS_ID",8);
 	else if(paymentMode.equalsIgnoreCase("PAYU"))
 		data.addValue("ORDER_STATUS_ID", 8);
-	else if(paymentMode.equalsIgnoreCase("COD"))
+	else if(paymentMode.equalsIgnoreCase("COD") || paymentMode.equalsIgnoreCase("PAYTMAPP") || paymentMode.equalsIgnoreCase("PAYUAPP"))
 		data.addValue("ORDER_STATUS_ID", 1);
 	int insertedStausId=0;
 	try {
@@ -1531,5 +1546,62 @@ public int insertOrderStatus(int orderId,String paymentMode) {
 			return "FAIL";
 		else
 			return "SUCCESS";
-}
+	}
+	
+	private boolean mobileAppData(User user){
+			boolean insertedData=false;
+			MapSqlParameterSource newUserInsert=new MapSqlParameterSource();
+			newUserInsert.addValue("DEVICE_ID", user.getDeviceId());
+			newUserInsert.addValue("APP_REGISTRATION_ID", user.getAppRegistrationId());
+			newUserInsert.addValue("USER_ID", user.getUserId());
+			newUserInsert.addValue("STATUS", "A");		
+			try {
+				int mobileUserId=insertMobileData.executeAndReturnKey(newUserInsert).intValue();	
+				insertedData=true;
+				}catch (Exception e) {
+					e.printStackTrace();
+				}				
+			return insertedData;
+	}
+
+	@Override
+	public PlanSubscription getPlanSubscriptionDetails(String orderId) {
+
+		PlanSubscription planSubscription=new PlanSubscription();
+		MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
+		String userIdQuery = "SELECT * FROM plan_subscription p join user u on u.user_id=p.user_id where p.id="+orderId;
+		try {
+			planSubscription= (PlanSubscription)namedParameterJdbcTemplate.queryForObject(userIdQuery,mapSqlParameterSource, new RowMapper(){
+				@Override
+				public Object mapRow(ResultSet rs, int arg1)
+						throws SQLException {
+
+					PlanSubscription planSubscription =new PlanSubscription();
+					planSubscription.setAddressId(rs.getInt("ADDRESS_ID"));
+					planSubscription.setComboId(rs.getInt("COMBO_ID")+"");
+					planSubscription.setEndDate(rs.getString("END_DATE"));
+					planSubscription.setPaymentMode(rs.getString("PAYMENT_MODE"));
+					planSubscription.setPlanCost(rs.getInt("PLAN_COST"));
+					planSubscription.setPlanSubscribeId(rs.getInt("ID"));
+					planSubscription.setPlanType(rs.getString("PLAN_TYPE"));
+					planSubscription.setSelectedDate(rs.getString("SELECTED_DATE"));
+					planSubscription.setStartDate(rs.getString("START_DATE"));
+					planSubscription.setTimeSlot(rs.getString("TIME_SLOT"));
+					planSubscription.setMobile(rs.getString("PHONE"));
+					planSubscription.setEmail(rs.getString("EMAIL"));
+					ResponseStatus response=new ResponseStatus();
+					response.setResponseCode("HM200");
+					response.setResponseMessage(configReader.getValue("HM200"));
+					planSubscription.setResponseStatus(response);
+					return planSubscription;
+				
+				}
+			});
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+		}
+		return planSubscription;
+	
+	}
+
 }

@@ -157,8 +157,8 @@ public class UserAPIImpl implements UserAPI{
 	}
 
 	@Override
-	public boolean sendMessage(String orderId) {
-		return userFacade.sendMessage(orderId);
+	public boolean sendMessage(String orderId,String orderType) {
+		return userFacade.sendMessage(orderId,orderType);
 
 	}
 

@@ -40,5 +40,9 @@ public interface AdminDAO {
 
 	CouponTxn alterCoupon(CouponTxn couponDetails);
 
+	List<User> getUserListForNotification();
+
+	List<String> getRegistrationIdForNotification();
+
 
 }

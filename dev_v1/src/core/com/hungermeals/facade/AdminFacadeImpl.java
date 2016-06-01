@@ -130,5 +130,15 @@ public class AdminFacadeImpl implements AdminFacade{
 		return adminDAO.alterCoupon(couponDetails);
 
 	}
+	@Override
+	public List<User> getUserListForNotification() {
+		return adminDAO.getUserListForNotification();
+
+	}
+	@Override
+	public List<String> getRegistrationIdForNotification() {
+		return adminDAO.getRegistrationIdForNotification();
+
+	}
 
 }

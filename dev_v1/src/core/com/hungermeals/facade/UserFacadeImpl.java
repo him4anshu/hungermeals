@@ -276,6 +276,8 @@ public class UserFacadeImpl implements UserFacade{
 				e.printStackTrace();
 			}
 			orderStatus.setChecksum(checksum);
+			p.setOrderStatus(orderStatus);
+
 		}else if(p.getPlanSubscribeId()!=0 && "PAYU".equalsIgnoreCase(planSubscription.getPaymentMode())){
 			OrderStatus orderStatus=new OrderStatus();
 			OrderDetails orderDetails=new OrderDetails();
@@ -290,6 +292,8 @@ public class UserFacadeImpl implements UserFacade{
 			orderDetails.setOrderInfo(orderInfo);
 			PayuService payuService = new PayuService();
 			orderStatus.setWalletRequest(payuService.payuWalletRequestParameter(orderDetails,orderStatus));
+			p.setOrderStatus(orderStatus);
+
 		}
 		return p;
 
@@ -409,9 +413,26 @@ public class UserFacadeImpl implements UserFacade{
 		return userDAO.paytmWalletResponse(parameters);
 
 	}
-	@Override
-	public boolean sendMessage(String orderId) {
-
+	public boolean sendMessageForPlanSubscription(String orderId){
+		String templateId=configReader.getValue("sms.subscribeplan");
+		PlanSubscription planSubscription=userDAO.getPlanSubscriptionDetails(orderId);
+		SMSThirdPartyService sms=new SMSThirdPartyService();
+		String phone=planSubscription.getMobile();
+		Map<String,String> orderDependentParameters=new HashMap<String, String>();
+		//orderDependentParameters.put("F1", "");
+		//orderDependentParameters.put("F2", "");
+		//orderDependentParameters.put("F3", orderStatus.getExecutiveName()+" (+91 "+orderStatus.getExecutivePhone()+" )");	
+		//orderDependentParameters.put("F3", "");
+		try {
+			sms.sendOrderConfermation(new Long(phone), new Long(templateId), orderDependentParameters);
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return true;
+	}
+	public boolean sendMessageForDailyOrder(String orderId){
 		String templateId=configReader.getValue("sms.orderplaced4customer");
 		SMSThirdPartyService sms=new SMSThirdPartyService();
 		User user=userDAO.getCustomerByOrder(orderId);
@@ -470,8 +491,18 @@ public class UserFacadeImpl implements UserFacade{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		
 		return true;
+	}
+	@Override
+	public boolean sendMessage(String orderId,String ordrType) {
+
+		if(ordrType.equalsIgnoreCase("DAILY_ORDER"))
+			return sendMessageForDailyOrder(orderId);
+		else if(ordrType.equalsIgnoreCase("MONTHLY_ORDER")){
+			return sendMessageForPlanSubscription(orderId);
+		}else {
+			return false;
+		}
 
 	}
 	@Override

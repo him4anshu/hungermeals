@@ -21,6 +21,7 @@ public class PlanSubscription {
 	private boolean updatedStatus;
 	private Address address;
 	private String email;
+	private OrderStatus orderStatus;
 	public String getPlanType() {
 		return planType;
 	}
@@ -122,6 +123,12 @@ public class PlanSubscription {
 	}
 	public void setEmail(String email) {
 		this.email = email;
+	}
+	public OrderStatus getOrderStatus() {
+		return orderStatus;
+	}
+	public void setOrderStatus(OrderStatus orderStatus) {
+		this.orderStatus = orderStatus;
 	}
 	
 	
