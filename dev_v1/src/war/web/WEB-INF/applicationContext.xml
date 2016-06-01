@@ -41,7 +41,8 @@
 	
 	<bean id="configReader" class="com.hungermeals.common.ConfigReader"/>
 	<bean id="smsThirdPartyService" class="com.hungermeals.common.SMSThirdPartyService"/>
-
+	<bean id="hungermealsMailSender" class="com.hungermeals.common.MailSender"/>
+	
 	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
 		<property name="driverClassName">
 			<value>${database.driver}</value>

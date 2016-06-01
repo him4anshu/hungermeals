@@ -109,5 +109,11 @@
 	<classpathentry kind="lib" path="dev_v1/lib/xstream-1.2.2.jar"/>
 	<classpathentry kind="lib" path="dev_v1/lib/xstream-1.2.jar"/>
 	<classpathentry kind="lib" path="dev_v1/lib/xwork-core-2.1.6.jar"/>
+	<classpathentry kind="lib" path="dev_v1/lib/paytm-checksum-1.1.jar"/>
+	<classpathentry kind="lib" path="dev_v1/lib/gson-2.2.2.jar"/>
+	<classpathentry kind="lib" path="D:/JarFile/gcm-server.jar"/>
+	<classpathentry kind="lib" path="D:/JarFile/json_simple-1.1.jar"/>
+	<classpathentry kind="lib" path="D:/JarFile/jackson-databind-2.5.3.jar"/>
+	<classpathentry kind="lib" path="D:/JarFile/jackson-core-2.5.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
