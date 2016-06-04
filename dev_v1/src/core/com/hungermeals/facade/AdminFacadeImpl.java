@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.hungermeals.common.ConfigReader;
 import com.hungermeals.common.SMSThirdPartyService;
 import com.hungermeals.dao.AdminDAO;
+import com.hungermeals.persist.ComboDetails;
 import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.Item;
 import com.hungermeals.persist.Menu;
@@ -138,6 +139,11 @@ public class AdminFacadeImpl implements AdminFacade{
 	@Override
 	public List<String> getRegistrationIdForNotification() {
 		return adminDAO.getRegistrationIdForNotification();
+
+	}
+	@Override
+	public ComboDetails alterComboDetails(ComboDetails comboDetails) {
+		return adminDAO.alterComboDetails(comboDetails);
 
 	}
 

@@ -33,7 +33,7 @@ public class NLCPSecurityFilter implements Filter {
 	public void doFilter(ServletRequest req, ServletResponse res,
 						 FilterChain chain) 
 	throws IOException, ServletException {
-		System.out.println("Mailer SecurityFilter::doFilter Called");
+		//System.out.println("Mailer SecurityFilter::doFilter Called");
 		HttpServletRequest request = (HttpServletRequest) req;
 		HttpServletResponse response = (HttpServletResponse) res;
 		String uri = request.getRequestURI();
@@ -50,15 +50,15 @@ public class NLCPSecurityFilter implements Filter {
 			
 		}
 		
-		System.out.println("is secured --------------->"+isSecure);
+		//System.out.println("is secured --------------->"+isSecure);
 		
 	
 		if (!isSecure) {
 			HttpSession session = request.getSession();
 			
-			System.out.println("login user object reffernce : "+session.getAttribute("LoggedInUser"));
+			//System.out.println("login user object reffernce : "+session.getAttribute("LoggedInUser"));
 			if (session.getAttribute("LoggedInUser") == null) {
-				System.out.println("User not logged in to access this page");
+				//System.out.println("User not logged in to access this page");
 				session.invalidate();
 				
 				// removed authentication for interfaces
@@ -67,11 +67,11 @@ public class NLCPSecurityFilter implements Filter {
 								
 				
 			} else {
-				System.out.println("User logged in. Proceed to the page");
+				//System.out.println("User logged in. Proceed to the page");
 				chain.doFilter(request, response);
 			}
 		} else {
-			System.out.println("URL is  secured. Allow user to access");
+			//System.out.println("URL is  secured. Allow user to access");
 			chain.doFilter(request, response);
 			//response.sendRedirect("../nlt/SessionExp.action");
 		}
@@ -86,7 +86,7 @@ public class NLCPSecurityFilter implements Filter {
 		String[] s = paramUnsecuredURL.split(";");
 		for (int i = 0;i<s.length;i++) {
 			securedURLs.add(s[i]);
-			System.out.println("secured URI "+s[i]);
+			//System.out.println("secured URI "+s[i]);
 		}
 
 	}

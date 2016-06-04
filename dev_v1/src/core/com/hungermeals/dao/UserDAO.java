@@ -80,4 +80,6 @@ public interface UserDAO {
 
 	PlanSubscription getPlanSubscriptionDetails(String orderId);
 
+	User registerMobileDevice(User user);
+
 }

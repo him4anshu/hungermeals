@@ -75,5 +75,7 @@ public interface UserFacade {
 
 	String updateOrderStatus(String string);
 
+	User registerMobileDevice(User user);
+
 
 }

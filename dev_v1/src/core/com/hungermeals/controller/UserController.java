@@ -560,4 +560,11 @@ public class UserController {
 	public List<Menu> menu(){
 		return userAPI.menu();
 	}
+	
+	@POST
+	@Path("/registerMobileDevice.json")
+    @Produces("application/json")
+	public User registerMobileDevice(User user){
+		return userAPI.registerMobileDevice(user);
+	}
 }

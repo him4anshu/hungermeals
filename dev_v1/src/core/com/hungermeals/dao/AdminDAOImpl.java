@@ -47,6 +47,7 @@ public class AdminDAOImpl implements AdminDAO {
 	private SimpleJdbcInsert insertMenu;
 	private SimpleJdbcInsert insertItem;
 	private SimpleJdbcInsert insertCoupon;
+	private SimpleJdbcInsert insertCombo;
 
 	public void setDataSource(DataSource ds) {
 		namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(ds);
@@ -60,6 +61,9 @@ public class AdminDAOImpl implements AdminDAO {
 		
 		insertCoupon = new SimpleJdbcInsert(ds).withTableName("coupon_details")
 				.usingGeneratedKeyColumns("id");
+		
+		insertCombo = new SimpleJdbcInsert(ds).withTableName("combo_details")
+				.usingGeneratedKeyColumns("combo_id");
 	}
 
 	@Override
@@ -850,11 +854,172 @@ public class AdminDAOImpl implements AdminDAO {
 	public List<String> getRegistrationIdForNotification() {
 
 		String userDetailSql="select app_registration_id from mobile_user where status='A'";		
-		List<String> regIdList = jdbcTemplate.query(userDetailSql, new RowMapper<String>(){
-            public String mapRow(ResultSet rs, int rowNum) throws SQLException {
-                    return rs.getString(1);
-            }
-		});	
+		List<String> regIdList=new ArrayList<String>();
+		try {
+			regIdList = jdbcTemplate.query(userDetailSql, new RowMapper<String>(){
+			    public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+			            return rs.getString("app_registration_id");
+			    }
+			});
+		} catch (DataAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
 		return regIdList;
+	}
+
+	@Override
+	public ComboDetails alterComboDetails(ComboDetails comboDetails) {
+
+		if(comboDetails.getOperationType().equalsIgnoreCase("ADDCOMBO")){
+			return addCombo(comboDetails);
+		}else if(comboDetails.getOperationType().equalsIgnoreCase("UPDATECOMBO")){
+			return updateCombo(comboDetails);
+		}else if(comboDetails.getOperationType().equalsIgnoreCase("DELETECOMBO")){
+			return deleteCombo(comboDetails);
+		}else if(comboDetails.getOperationType().equalsIgnoreCase("GETCOMBO")){
+			return getCombo(comboDetails);
+		}else if(comboDetails.getOperationType().equalsIgnoreCase("GETALLCOMBO")){
+			return getAllCombo(comboDetails);
+		}else{
+			return comboDetails;
+		}
+
+	}
+
+	private ComboDetails getAllCombo(ComboDetails comboDetails) {
+		MapSqlParameterSource map = new MapSqlParameterSource();
+		String couponDetailsQuery ="SELECT * FROM combo_details";
+		List<ComboDetails> comboListDetails=new ArrayList<ComboDetails>();
+		try {
+			comboListDetails =namedParameterJdbcTemplate.query(couponDetailsQuery,map, new RowMapper(){
+			@Override
+			public Object mapRow(ResultSet rs, int arg1)
+					throws SQLException {
+				ComboDetails comboDetails=new ComboDetails();
+				comboDetails.setComboId(rs.getInt("combo_Id"));
+				comboDetails.setComboName(rs.getString("combo_name"));
+				comboDetails.setCost(rs.getInt("combo_price"));
+				comboDetails.setStatus(rs.getString("status"));
+				return comboDetails;
+			}
+		 });
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+		}
+		comboDetails.setComboList(comboListDetails);
+		return comboDetails;
+	
+	}
+
+	private ComboDetails getCombo(ComboDetails comboDetails) {
+		
+		MapSqlParameterSource map = new MapSqlParameterSource();
+		map.addValue("combo_Id", comboDetails.getComboId());
+		String couponDetailsQuery ="SELECT * FROM combo_details WHERE combo_Id=:combo_Id ";
+		ComboDetails cp=new ComboDetails();
+		try {
+			cp = (ComboDetails) namedParameterJdbcTemplate.queryForObject(couponDetailsQuery,map, new RowMapper(){
+			@Override
+			public Object mapRow(ResultSet rs, int arg1)
+					throws SQLException {
+				ComboDetails comboDetails=new ComboDetails();
+				comboDetails.setComboId(rs.getInt("combo_Id"));
+				comboDetails.setComboName(rs.getString("combo_name"));
+				comboDetails.setCost(rs.getInt("combo_price"));
+				comboDetails.setStatus(rs.getString("status"));
+				return comboDetails;
+			}
+		 });
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+		}	
+		return cp;
+	
+	
+	}
+
+	private ComboDetails deleteCombo(ComboDetails comboDetails) {
+		ResponseStatus response = new ResponseStatus();
+		comboDetails.setResponseStatus(response);
+		MapSqlParameterSource updateCoupon = new MapSqlParameterSource();
+		updateCoupon.addValue("combo_Id", comboDetails.getComboId());
+		String updateCouponQuery = "UPDATE combo_details SET STATUS='D' WHERE combo_Id=:combo_Id";
+		int updateResult = 0;
+		try {
+			updateResult = namedParameterJdbcTemplate.update(updateCouponQuery,
+					updateCoupon);
+			if (updateResult != 0) {
+				response.setResponseCode("HM200");
+				response.setResponseMessage(configReader.getValue("HM200"));
+			} else {
+				response.setResponseCode("HM203");
+				response.setResponseMessage(configReader.getValue("HM203"));
+			}
+		} catch (DataAccessException e1) {
+			e1.printStackTrace();
+			response.setResponseCode("HM103");
+			response.setResponseMessage(configReader.getValue("HM103"));
+			response.setErrorDetails(e1.getMessage());
+		}
+		return comboDetails;
+	}
+
+	private ComboDetails updateCombo(ComboDetails comboDetails) {
+		ResponseStatus response = new ResponseStatus();
+		comboDetails.setResponseStatus(response);
+		MapSqlParameterSource updateCoupon = new MapSqlParameterSource();
+		updateCoupon.addValue("combo_name", comboDetails.getComboName());
+		updateCoupon.addValue("combo_price",comboDetails.getCost());
+		updateCoupon.addValue("modified_date", new Date());
+		updateCoupon.addValue("status", "A");
+		updateCoupon.addValue("combo_Id", comboDetails.getComboId());
+		//updateMenu.addValue("MODIFIED_DATE", new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date()));
+		String updateComboQuery = "UPDATE combo_details SET status=:status,combo_name=:combo_name,combo_price=:combo_price,modified_date=now() WHERE combo_Id=:combo_Id";
+		int updateResult = 0;
+		try {
+			updateResult = namedParameterJdbcTemplate.update(updateComboQuery,
+					updateCoupon);
+			if (updateResult != 0) {
+				response.setResponseCode("HM200");
+				response.setResponseMessage(configReader.getValue("HM200"));
+			} else {
+				response.setResponseCode("HM203");
+				response.setResponseMessage(configReader.getValue("HM203"));
+			}
+		} catch (DataAccessException e) {
+			e.printStackTrace();
+			response.setResponseCode("HM103");
+			response.setResponseMessage(configReader.getValue("HM103"));
+			response.setErrorDetails(e.getMessage());
+
+		}
+		return comboDetails;
+	}
+
+	private ComboDetails addCombo(ComboDetails comboDetails) {
+
+		ResponseStatus response = new ResponseStatus();
+		MapSqlParameterSource newComboInsert = new MapSqlParameterSource();
+		newComboInsert.addValue("combo_name", comboDetails.getComboName());
+		newComboInsert.addValue("combo_price",comboDetails.getCost());
+		newComboInsert.addValue("status","A");
+
+	try {
+			int comboId = insertCombo.executeAndReturnKey(newComboInsert)
+					.intValue();
+			comboDetails.setComboId(comboId);
+			response.setResponseCode("HM200");
+			response.setResponseMessage(configReader.getValue("HM200"));
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.setResponseCode("HM103");
+			response.setResponseMessage(configReader.getValue("HM103"));
+			response.setErrorDetails(e.getMessage());
+		}
+	comboDetails.setResponseStatus(response);
+		return comboDetails;
+	
+	
 	}
 }

@@ -22,6 +22,7 @@ import com.google.android.gcm.server.MulticastResult;
 import com.google.android.gcm.server.Sender;
 import com.hungermeals.api.AdminAPI;
 import com.hungermeals.common.POST2GCM;
+import com.hungermeals.persist.ComboDetails;
 import com.hungermeals.persist.Content;
 import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.Item;
@@ -174,20 +175,32 @@ public class AdminController {
     @POST
 	@Path("/GCMBroadcast.json")
     @Produces("application/json")
-	public MulticastResult GCMBroadcast(MyMessage mssg){
+	public MyMessage GCMBroadcast(MyMessage mssg){
 		System.out.println("Inside pushDataToDevice method ###############");
 		Sender gcmSender = new Sender("AIzaSyBcnGBVGBFJBWn0XM_ZEN-dtVzJRKOViL8");
 		Message message = new Message.Builder().priority(Message.Priority.NORMAL)
 				.addData("title",mssg.getTitle())
 				.addData("message",mssg.getMessage()).build();
         List<String> regIdList=adminAPI.getRegistrationIdForNotification();
+        System.out.println("RegisteredId list size"+regIdList.size());
 		MulticastResult mRes=null;
 		try {
-			mRes = gcmSender.sendNoRetry(message, regIdList);
+			//mRes = gcmSender.sendNoRetry(message, regIdList);
+			gcmSender.send(message, regIdList, 3);
+			mssg.setSentStatus("success");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			mssg.setSentStatus("success");
+
 		}
-		return mRes;
+		return mssg;
     }
+    
+    @POST
+	@Path("/alterComboDetails.json")
+    @Produces("application/json")
+	public ComboDetails alterComboDetails(ComboDetails comboDetails){
+		return adminAPI.alterComboDetails(comboDetails);
+	}
 }

@@ -2,6 +2,7 @@ package com.hungermeals.api;
 
 import java.util.List;
 
+import com.hungermeals.persist.ComboDetails;
 import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.Item;
 import com.hungermeals.persist.Menu;
@@ -40,5 +41,7 @@ public interface AdminAPI {
 	List<User> getUserListForNotification();
 
 	List<String> getRegistrationIdForNotification();
+
+	ComboDetails alterComboDetails(ComboDetails comboDetails);
 
 }

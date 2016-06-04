@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.hungermeals.facade.AdminFacade;
+import com.hungermeals.persist.ComboDetails;
 import com.hungermeals.persist.CouponTxn;
 import com.hungermeals.persist.Item;
 import com.hungermeals.persist.Menu;
@@ -103,6 +104,12 @@ public class AdminAPIImpl implements AdminAPI{
 	@Override
 	public List<String> getRegistrationIdForNotification() {
 		return adminFacade.getRegistrationIdForNotification();
+
+	}
+
+	@Override
+	public ComboDetails alterComboDetails(ComboDetails comboDetails) {
+		return adminFacade.alterComboDetails(comboDetails);
 
 	}
 

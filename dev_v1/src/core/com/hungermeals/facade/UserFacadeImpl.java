@@ -530,6 +530,11 @@ public class UserFacadeImpl implements UserFacade{
 		return userDAO.updateOrderStatus(string);
 
 	}
+	@Override
+	public User registerMobileDevice(User user) {
+		return userDAO.registerMobileDevice(user);
+
+	}
 	
 		
 }

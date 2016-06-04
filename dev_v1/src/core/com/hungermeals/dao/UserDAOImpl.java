@@ -173,7 +173,8 @@ public class UserDAOImpl implements UserDAO{
 					//inserting data for mobile app registration
 					try {
 						if(user.getAppRegistrationId()!=null)
-							mobileAppData(user);
+							//mobileAppData(user);
+							relateUserWithMobileDevice(user);
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -1166,7 +1167,7 @@ public class UserDAOImpl implements UserDAO{
 
 	@Override
 	public List<ComboDetails> getComboDetails() {
-		String couponDetailsQuery ="SELECT * FROM combo_details";
+		String couponDetailsQuery ="SELECT * FROM combo_details where status='A'";
 		List<ComboDetails> cp=new ArrayList<ComboDetails>();
 		try {
 			cp =  namedParameterJdbcTemplate.query(couponDetailsQuery,new MapSqlParameterSource(), new RowMapper(){
@@ -1554,7 +1555,8 @@ public int insertOrderStatus(int orderId,String paymentMode) {
 			newUserInsert.addValue("DEVICE_ID", user.getDeviceId());
 			newUserInsert.addValue("APP_REGISTRATION_ID", user.getAppRegistrationId());
 			newUserInsert.addValue("USER_ID", user.getUserId());
-			newUserInsert.addValue("STATUS", "A");		
+			newUserInsert.addValue("STATUS", "A");			
+
 			try {
 				int mobileUserId=insertMobileData.executeAndReturnKey(newUserInsert).intValue();	
 				insertedData=true;
@@ -1602,6 +1604,59 @@ public int insertOrderStatus(int orderId,String paymentMode) {
 		}
 		return planSubscription;
 	
+	}
+
+	@Override
+	public User registerMobileDevice(User user) {
+
+		ResponseStatus response=new ResponseStatus();
+		MapSqlParameterSource newUserInsert=new MapSqlParameterSource();
+		newUserInsert.addValue("DEVICE_ID", user.getDeviceId());
+		newUserInsert.addValue("APP_REGISTRATION_ID", user.getAppRegistrationId());
+		newUserInsert.addValue("USER_ID", user.getUserId());
+		newUserInsert.addValue("STATUS", "A");			
+
+		try {
+			int mobileUserId=insertMobileData.executeAndReturnKey(newUserInsert).intValue();	
+			response.setResponseCode("HM200");
+			response.setResponseMessage(configReader.getValue("HM200"));
+			}catch (Exception e) {
+				user.setUserStatus(false);
+				e.printStackTrace();
+				response.setResponseCode("HM103");
+				response.setResponseMessage(configReader.getValue("HM103"));
+				response.setErrorDetails(e.getMessage());
+			}			
+		user.setResponseStatus(response);
+		return user;
+
+	}
+	
+	private User relateUserWithMobileDevice(User user){
+		ResponseStatus response=new ResponseStatus();
+		MapSqlParameterSource updateUser=new MapSqlParameterSource();
+		updateUser.addValue("USER_ID", user.getUserId());
+		updateUser.addValue("APP_REGISTRATION_ID", user.getAppRegistrationId());
+
+		int updateResult=0;
+		String updateQuery="UPDATE mobile_user SET USER_ID=:USER_ID,MODIFIED_DATE=now() WHERE APP_REGISTRATION_ID=:APP_REGISTRATION_ID";
+		try {
+			updateResult = namedParameterJdbcTemplate.update(updateQuery, updateUser);
+			if(updateResult!=0){
+				response.setResponseCode("HM200");
+				response.setResponseMessage(configReader.getValue("HM200"));
+			}else{
+				response.setResponseCode("HM203");
+				response.setResponseMessage(configReader.getValue("HM203"));
+			}
+		} catch (DataAccessException e1) {
+			e1.printStackTrace();
+			response.setResponseCode("HM103");
+			response.setResponseMessage(configReader.getValue("HM103"));
+			response.setErrorDetails(e1.getMessage());
+		}
+		user.setResponseStatus(response);
+		return user;
 	}
 
 }

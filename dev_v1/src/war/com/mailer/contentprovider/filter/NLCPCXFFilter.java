@@ -75,9 +75,9 @@ public class NLCPCXFFilter implements Filter {
 		TimeZone clientTimeZone = calendar.getTimeZone();  
 		Timestamp sT=new Timestamp(calendar.getTimeInMillis());
 		
-		System.out.println(sT+"-----"+calendar.getTimeInMillis()+"-------"+clientTimeZone+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@clientTimeZone :"+clientTimeZone.getID());
-		System.out.println("clientTime getRawOffset  :"+clientTimeZone.getRawOffset());
-		System.out.println("clientTime getRawOffset  :"+clientTimeZone.getDefault());
+		//System.out.println(sT+"-----"+calendar.getTimeInMillis()+"-------"+clientTimeZone+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@clientTimeZone :"+clientTimeZone.getID());
+		//System.out.println("clientTime getRawOffset  :"+clientTimeZone.getRawOffset());
+		//System.out.println("clientTime getRawOffset  :"+clientTimeZone.getDefault());
 		    
 		//reHandle.handleRequest(request,response);
 		
@@ -104,15 +104,15 @@ public class NLCPCXFFilter implements Filter {
 		
 		//StringRequestWrapper requestWrapper = new StringRequestWrapper ( request ) ; 
 		/*in=request.getInputStream();*/
-		System.out.println("INSIDE CXF FILTER");
+		//System.out.println("INSIDE CXF FILTER");
 		Cookie[] cookie = request.getCookies();
 		if(cookie!=null)
 		{
-			System.out.println("COOKIE :::::: ++++ "+cookie.length);
+			//Syst//System.out.printlnOKIE :::::: ++++ "+cookie.length);
 			for(Cookie coo:cookie)
 			{
-				System.out.println("NAME :: "+coo.getName());
-				System.out.println("Value :: "+coo.getValue());
+				//System.out.println("NAME :: "+coo.getName());
+				//System.out.println("Value :: "+coo.getValue());
 			}
 				
 		}
@@ -134,10 +134,10 @@ public class NLCPCXFFilter implements Filter {
 		   while (keys.hasMoreElements())
 		   {
 		      String key = (String)keys.nextElement();
-		      System.out.println("KEY ++ : "+key);
+		      //System.out.println("KEY ++ : "+key);
 		      //To retrieve a single value
 		      String value = request.getParameter(key);
-		      System.out.println("BODY +++ :: "+value);
+		      //System.out.println("BODY +++ :: "+value);
 		      // If the same key has multiple values (check boxes)
 		     // String[] valueArray = request.getParameterValues();
 		   }   
@@ -227,15 +227,15 @@ public class NLCPCXFFilter implements Filter {
 		   {
 		       cpuperc = -2;
 		   }
-		   System.out.println("CPU Usage before executing request : "+cpuperc);*/
+		   //System.out.println("CPU Usage before executing request : "+cpuperc);*/
 		   
 		   
 
 		   long startTime = System.currentTimeMillis();
 		   cput = TMB.getCurrentThreadCpuTime();
-		   System.out.println("maxMemory before : "+Runtime.getRuntime().maxMemory());
-			System.out.println("totalMemory  before : "+Runtime.getRuntime().totalMemory());
-			System.out.println("free memory before : "+Runtime.getRuntime().freeMemory());
+		   //System.out.println("maxMemory before : "+Runtime.getRuntime().maxMemory());
+			//System.out.println("totalMemory  before : "+Runtime.getRuntime().totalMemory());
+			//System.out.println("free memory before : "+Runtime.getRuntime().freeMemory());
 			OperatingSystemMXBean operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
 			   for (Method method : operatingSystemMXBean.getClass().getDeclaredMethods()) {
 		            method.setAccessible(true);
@@ -246,13 +246,13 @@ public class NLCPCXFFilter implements Filter {
 		                } catch (Exception e) {
 		                    value = e;
 		                }
-		                System.out.println(" before requesting "+method.getName() + " = " + value);
+		                //System.out.println(" before requesting "+method.getName() + " = " + value);
 		            }
 		            
 		        }
 			   
 		  
-			   System.out.println("REQUEST DETAILS::::::::::\nGet Method:"+request.getMethod()+"\nRemote Addr"+request.getRemoteAddr() +"\nRemote Host"+request.getRemoteHost() +"\nremote Port"+request.getRemotePort() +"\nRemote User"+request.getRemoteUser() +"\nClass"+request.getClass() +"\n");
+			   //System.out.println("REQUEST DETAILS::::::::::\nGet Method:"+request.getMethod()+"\nRemote Addr"+request.getRemoteAddr() +"\nRemote Host"+request.getRemoteHost() +"\nremote Port"+request.getRemotePort() +"\nRemote User"+request.getRemoteUser() +"\nClass"+request.getClass() +"\n");
 			chain.doFilter(request, response);
 		   operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
 		   for (Method method : operatingSystemMXBean.getClass().getDeclaredMethods()) {
@@ -264,7 +264,7 @@ public class NLCPCXFFilter implements Filter {
 	                } catch (Exception e) {
 	                    value = e;
 	                }
-	                System.out.println("after requesting :  "+method.getName() + " = " + value);
+	                //System.out.println("after requesting :  "+method.getName() + " = " + value);
 	            }
 	        }
 
@@ -273,7 +273,7 @@ public class NLCPCXFFilter implements Filter {
 		    }else{
 		    	cpuperc = -2;
 		    }
-			System.out.println("cpu usage percentage@********** : "+cpuperc);
+			//System.out.println("cpu usage percentage@********** : "+cpuperc);
 			 /* time = new Date().getTime() * 1000000;
 			    cput = 0;
 			    cpuperc = -1;
@@ -298,12 +298,11 @@ public class NLCPCXFFilter implements Filter {
 			       cpuperc = -2;
 			   }*/
 			//System.out.println("CPU Usage After executing request : "+cpuperc);
-			System.out.println("maxMemory after : "+Runtime.getRuntime().maxMemory());
-			System.out.println("totalMemory after : "+Runtime.getRuntime().totalMemory());
-			System.out.println("free memory after : "+Runtime.getRuntime().freeMemory());
-			System.out.println("++Start::  "+startTime +" Stop::  "+stopTime );
-	        System.out.println("++Time to execute request: " + (stopTime - startTime) + 
-	            " milliseconds");
+			//System.out.println("maxMemory after : "+Runtime.getRuntime().maxMemory());
+			//System.out.println("totalMemory after : "+Runtime.getRuntime().totalMemory());
+			//System.out.println("free memory after : "+Runtime.getRuntime().freeMemory());
+			//System.out.println("++Start::  "+startTime +" Stop::  "+stopTime );
+	        //System.out.println("++Time to execute request: " + (stopTime - startTime) + " milliseconds");
 	     
 	}
 

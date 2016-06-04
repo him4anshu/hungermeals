@@ -190,6 +190,12 @@ public class UserAPIImpl implements UserAPI{
 
 	}
 
+	@Override
+	public User registerMobileDevice(User user) {
+		return userFacade.registerMobileDevice(user);
+
+	}
+
 
 	
 

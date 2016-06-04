@@ -47,5 +47,6 @@ public interface UserAPI {
 	List<Menu> menu();
 	int payuWalletResponse(TreeMap<String, String> parameters);
 	String updateOrderStatus(String string);
+	User registerMobileDevice(User user);
 
 }

@@ -23,7 +23,7 @@ public class ConfigReader {
 
 	public String getValue(String key) {
 		
-		System.out.println("ingetValues");
+		//System.out.println("ingetValues");
 		
 		return bundle.getString(key);
 	}
